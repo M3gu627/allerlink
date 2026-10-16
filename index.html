@@ -12,7 +12,8 @@
     <nav>
       <button data-go="privacy">Customer</button>
       <button data-go="partner">Partner With Us</button>
-      <button data-go="scanner">Staff Sign-in</button>
+      <button data-go="login">Admin</button>
+      <button id="btn-signout" hidden>Sign out</button>
     </nav>
   </header>
 
@@ -68,9 +69,11 @@
         <div><b>AllerLink</b><br><small>MEMBERSHIP CARD</small><p id="card-name"></p><small id="card-id"></small></div>
         <div id="qr"></div>
       </div>
-      <h3>AllerPass package: ₱199 per 3 months</h3>
-      <p>Includes your AllerCard, profile updates anytime, and access at every participating establishment.</p>
-      <div class="actions"><button class="primary" data-go="delivery">Order my AllerCard</button></div>
+      <div id="order-box">
+        <h3>AllerPass package: ₱199 per 3 months</h3>
+        <p>Includes your AllerCard, profile updates anytime, and access at every participating establishment.</p>
+        <div class="actions"><button class="primary" data-go="delivery">Order my AllerCard</button></div>
+      </div>
     </section>
 
     <section data-view="delivery" hidden>
@@ -116,7 +119,16 @@
       <p>The AllerLink team will review it and email you an approval or rejection.</p>
     </section>
 
-    <section data-view="scanner" hidden>
+    <section data-view="login" hidden>
+      <h2>Sign in</h2>
+      <form id="form-login">
+        <label>Email <input name="email" type="email" required></label>
+        <label>Password <input name="password" type="password" required></label>
+        <button class="primary">Sign in</button>
+      </form>
+    </section>
+
+    <section data-view="dashboard" hidden>
       <h2>Establishment dashboard</h2>
       <div class="panel">
         <h3>Scan an AllerCard</h3>
