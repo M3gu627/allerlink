@@ -57,12 +57,14 @@ profileForm.addEventListener("submit", async (e) => {
     if (error) return alert(error.message);
     const { error: insertError } = await db.from("profiles").insert({ ...profile, id: data.user.id });
     if (insertError) return alert(insertError.message);
+    setSignedIn(true);
   } else {
     demo.push("profiles", profile);
   }
 
   state.customer = profile;
   renderCard(profile);
+  document.getElementById("order-box").hidden = false; // new customers can still order
   show("card");
 });
 
@@ -99,7 +101,44 @@ document.getElementById("form-partner").addEventListener("submit", async (e) => 
   show("partner-done");
 });
 
-// ---------- Scanner (staff) ----------
+// ---------- Sign in (one form for everyone, routed by role) ----------
+const signOutButton = document.getElementById("btn-signout");
+const setSignedIn = (signedIn) => (signOutButton.hidden = !signedIn);
+
+document.getElementById("form-login").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (!db) return show("dashboard"); // demo mode has no accounts
+  const { email, password } = formData(e.target);
+  const { data, error } = await db.auth.signInWithPassword({ email, password });
+  if (error) return alert(error.message);
+  setSignedIn(true);
+  const userId = data.user.id;
+
+  // Establishment account: open the dashboard (with the scanner) once approved.
+  const { data: establishment } = await db.from("establishments").select("active").eq("id", userId).maybeSingle();
+  if (establishment) {
+    if (!establishment.active) return alert("Your establishment account has not been approved yet.");
+    return show("dashboard");
+  }
+
+  // Customer account: show their own AllerCard QR again.
+  const { data: profile } = await db.from("profiles").select("*").eq("id", userId).maybeSingle();
+  if (profile) {
+    renderCard(profile);
+    document.getElementById("order-box").hidden = true; // returning customers only view their QR
+    return show("card");
+  }
+  alert("This account has no dashboard yet.");
+});
+
+signOutButton.addEventListener("click", async () => {
+  await db?.auth.signOut();
+  document.getElementById("result").hidden = true;
+  setSignedIn(false);
+  show("home");
+});
+
+// ---------- Scanner (inside the establishment dashboard) ----------
 async function lookup(token) {
   let profile;
   if (db) {
