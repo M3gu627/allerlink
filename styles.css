@@ -20,6 +20,8 @@ body { margin: 0; background: var(--bg); color: var(--ink); line-height: 1.6; }
 main { max-width: 640px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
 h1 { font-size: clamp(1.9rem, 5vw, 2.8rem); line-height: 1.15; color: var(--green-dark); }
 h2 { color: var(--green-dark); }
+.back { background: none; border: 0; color: var(--green-dark); font: inherit; font-weight: 600; cursor: pointer; padding: 0; margin-bottom: 1rem; }
+.back:hover { text-decoration: underline; }
 .lead { font-size: 1.15rem; }
 .how { padding-left: 1.2rem; }
 .note { font-size: .9rem; color: #5a6b7a; }
