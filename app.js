@@ -14,10 +14,20 @@ const demo = {
 // ---------- Navigation ----------
 const state = { customer: null, scanner: null };
 
-function show(view) {
+const viewHistory = []; // pages visited before the current one, for the Back button
+let currentView = "home";
+const backButton = document.getElementById("btn-back");
+
+function show(view, { isBack = false } = {}) {
+  if (!isBack && view !== currentView) viewHistory.push(currentView);
+  if (view === "home") viewHistory.length = 0; // Home and sign out start a fresh trail
+  currentView = view;
   document.querySelectorAll("[data-view]").forEach((s) => (s.hidden = s.dataset.view !== view));
+  backButton.hidden = viewHistory.length === 0;
   window.scrollTo(0, 0);
 }
+
+backButton.addEventListener("click", () => show(viewHistory.pop(), { isBack: true }));
 
 document.addEventListener("click", (e) => {
   const target = e.target.closest("[data-go]");
