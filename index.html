@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AllerLink Technologies | Connecting Guests to Safer Choices</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="bar">
+    <a href="#" data-go="home" class="brand">AllerLink <small>Technologies</small></a>
+    <nav>
+      <button data-go="privacy">Customer</button>
+      <button data-go="partner">Partner With Us</button>
+      <button data-go="scanner">Staff Sign-in</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- 1. HOMEPAGE -->
+    <section data-view="home">
+      <h1>Say your allergy once. Show it everywhere.</h1>
+      <p class="lead">AllerPass keeps your food-allergy profile. AllerCard is the QR card that lets participating restaurants see it, so you never have to explain it again.</p>
+      <ol class="how">
+        <li><b>Register</b> your allergies in AllerPass.</li>
+        <li><b>Receive</b> your AllerCard with a unique QR code.</li>
+        <li><b>Show it</b> at a partner. Staff scan it and see only what they need, only for that visit.</li>
+      </ol>
+      <div class="actions">
+        <button class="primary" data-go="privacy">Customer</button>
+        <button class="ghost" data-go="partner">Partner With Us</button>
+      </div>
+      <p class="note">AllerCard is an information and communication tool. It does not diagnose allergies or guarantee an allergen-free meal.</p>
+    </section>
+
+    <!-- 3. CUSTOMER FLOW -->
+    <section data-view="privacy" hidden>
+      <h2>Before we collect your allergy information</h2>
+      <p>Under the Data Privacy Act, here is how we handle your data:</p>
+      <ul>
+        <li><b>What:</b> name, email, birthday, allergies, optional emergency notes.</li>
+        <li><b>Why:</b> to build your AllerCard and show your allergies to partner staff.</li>
+        <li><b>Who sees it:</b> partner staff see it only after scanning your card, and only for that scan.</li>
+        <li><b>Protection:</b> encrypted connection, access controls, no allergy data inside the QR code.</li>
+        <li><b>Retention:</b> kept while your account is active. You can ask for correction or deletion anytime.</li>
+      </ul>
+      <label class="check"><input type="checkbox" id="consent-customer"> I have read this notice and consent to the processing of my allergy information.</label>
+      <div class="actions"><button class="primary" id="btn-consent">Continue</button></div>
+    </section>
+
+    <section data-view="profile" hidden>
+      <h2>Your allergy profile</h2>
+      <form id="form-profile">
+        <label>Name or display name <input name="display_name" required></label>
+        <label>Email <input name="email" type="email" required></label>
+        <label>Password <input name="password" type="password" minlength="8" required></label>
+        <label>Birthday <input name="birthday" type="date" required></label>
+        <label>Age <input name="age" readonly></label>
+        <label>Food allergies (separate with commas) <input name="allergies" placeholder="peanuts, shrimp, milk" required></label>
+        <label>Emergency notes (optional) <textarea name="emergency_notes" rows="2"></textarea></label>
+        <button class="primary">Create my AllerCard</button>
+      </form>
+    </section>
+
+    <section data-view="card" hidden>
+      <h2>Your AllerCard preview</h2>
+      <div class="card">
+        <div><b>AllerLink</b><br><small>MEMBERSHIP CARD</small><p id="card-name"></p><small id="card-id"></small></div>
+        <div id="qr"></div>
+      </div>
+      <h3>AllerPass package: ₱199 per 3 months</h3>
+      <p>Includes your AllerCard, profile updates anytime, and access at every participating establishment.</p>
+      <div class="actions"><button class="primary" data-go="delivery">Order my AllerCard</button></div>
+    </section>
+
+    <section data-view="delivery" hidden>
+      <h2>Delivery information</h2>
+      <form id="form-delivery">
+        <label>Contact number <input name="phone" type="tel" required></label>
+        <label>House/building number and street <input name="street" required></label>
+        <label>Barangay <input name="barangay" required></label>
+        <label>City/Municipality <input name="city" required></label>
+        <label>Province <input name="province" required></label>
+        <label>ZIP code <input name="zip" required></label>
+        <label>Delivery instructions (optional) <textarea name="notes" rows="2"></textarea></label>
+        <button class="primary">Place order</button>
+      </form>
+    </section>
+
+    <section data-view="done" hidden>
+      <h2>Order received</h2>
+      <p>We sent a confirmation to your email. We will confirm your delivery date once your card is ready.</p>
+      <p class="note">Your dashboard (profile, subscription, delivery status) is the next screen to build. See the README notes.</p>
+    </section>
+
+    <!-- 2. FOOD ESTABLISHMENT FLOW -->
+    <section data-view="partner" hidden>
+      <h2>Partner with AllerLink</h2>
+      <p>Membership: <b>₱399 per month</b>, billed after your application is approved.</p>
+      <form id="form-partner">
+        <label>Business name <input name="business_name" required></label>
+        <label>Business type
+          <select name="business_type"><option>Restaurant</option><option>Café</option><option>Bakery</option><option>Hotel or resort</option><option>Catering</option><option>Food stall or court</option></select>
+        </label>
+        <label>Business address <input name="address" required></label>
+        <label>Contact person <input name="contact_person" required></label>
+        <label>Business email <input name="email" type="email" required></label>
+        <label>Phone number <input name="phone" type="tel" required></label>
+        <label class="check"><input type="checkbox" name="consent" required> I acknowledge the privacy notice and agree to handle customer allergy information only for food-safety communication.</label>
+        <button class="primary">Submit application</button>
+      </form>
+    </section>
+
+    <section data-view="partner-done" hidden>
+      <h2>Application received</h2>
+      <p>The AllerLink team will review it and email you an approval or rejection.</p>
+    </section>
+
+    <section data-view="scanner" hidden>
+      <h2>Establishment dashboard</h2>
+      <div class="panel">
+        <h3>Scan an AllerCard</h3>
+        <div id="reader"></div>
+        <button class="primary" id="btn-scan">Start camera</button>
+        <small>Demo: paste a card ID instead</small>
+        <input id="manual-token" placeholder="Card ID">
+        <button class="ghost" id="btn-manual">Look up</button>
+      </div>
+      <div class="panel result" id="result" hidden>
+        <h3>Allergies for this visit</h3>
+        <p id="result-name"></p>
+        <ul id="result-allergies"></ul>
+        <p class="note">Verify ingredients and cross-contact before serving. This view closes when you press done.</p>
+        <button class="ghost" id="btn-close">Done</button>
+      </div>
+      <div class="panel">
+        <h3>Usage</h3>
+        <p>Total scans: <b id="stat-total">0</b></p>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
