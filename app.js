@@ -22,12 +22,13 @@ const layout = document.getElementById("layout");
 const sideNav = document.getElementById("sidenav");
 // Pages that show the dashboard side menu, per account type.
 const sideNavViews = {
-  customer: ["overview", "card", "foods", "wallet", "delivery", "done", "edit"],
+  customer: ["card", "foods", "wallet", "delivery", "done"],
   establishment: ["dashboard"],
 };
-const customerViews = ["overview", "foods", "wallet"]; // need a signed-in customer
+const customerViews = ["card", "foods", "wallet"]; // need a signed-in customer
 
 function show(view, { isBack = false, reset = false } = {}) {
+  if (view === "home" && state.role) view = state.role === "customer" ? "card" : "dashboard"; // signed-in users stay in their dashboard
   if (customerViews.includes(view) && !state.customer) {
     setLoginKind("customer"); // signed-out visitors are sent to log in first
     view = "login";
@@ -35,8 +36,11 @@ function show(view, { isBack = false, reset = false } = {}) {
   if (!isBack && view !== currentView) viewHistory.push(currentView);
   if (view === "home" || reset) viewHistory.length = 0; // Home, sign out, and landing pages start a fresh trail
   currentView = view;
-  if (view === "edit") fillEditForm();
-  if (view === "overview") loadOverview();
+  if (view === "card") {
+    fillEditForm();
+    render2dCard(state.customer);
+    loadHistory();
+  }
   if (view === "foods") loadFoods();
   if (view === "wallet") loadWallet();
   document.querySelectorAll("[data-view]").forEach((s) => (s.hidden = s.dataset.view !== view));
@@ -135,6 +139,12 @@ function renderCard(profile) {
   card3d.setProfile(profile);
 }
 
+// Flat copies of the card (front and back), shown under the 3D model.
+async function render2dCard(profile) {
+  const [front, back] = await Promise.all([drawCardFace(profile), drawCardBack()]);
+  document.getElementById("card2d").replaceChildren(front, back);
+}
+
 document.getElementById("btn-download").addEventListener("click", async () => {
   const canvas = await drawCardFace(state.customer);
   const link = document.createElement("a");
@@ -163,8 +173,8 @@ editForm.addEventListener("submit", async (e) => {
   if (error) return alert(error.message);
   state.customer = { ...state.customer, ...changes };
   renderCard(state.customer);
+  render2dCard(state.customer);
   alert("Your information was updated.");
-  show("card", { reset: true });
 });
 
 document.getElementById("form-delivery").addEventListener("submit", async (e) => {
@@ -194,7 +204,11 @@ document.getElementById("form-partner").addEventListener("submit", async (e) => 
 
 // ---------- Sign in (one form for everyone, routed by role) ----------
 const signOutButton = document.getElementById("btn-signout");
-const setSignedIn = (signedIn) => (signOutButton.hidden = !signedIn);
+const setSignedIn = (signedIn) => {
+  signOutButton.hidden = !signedIn;
+  // Signed-in users only see Sign out up here; everything else is in the side menu.
+  document.querySelectorAll("header nav [data-go]").forEach((button) => (button.hidden = signedIn));
+};
 
 document.getElementById("form-login").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -219,7 +233,7 @@ document.getElementById("form-login").addEventListener("submit", async (e) => {
     state.customer = profile;
     state.role = "customer";
     renderCard(profile);
-    return show("overview", { reset: true });
+    return show("card", { reset: true });
   }
   alert("This account has no dashboard yet.");
 });
@@ -233,8 +247,6 @@ signOutButton.addEventListener("click", async () => {
   setSignedIn(false);
   show("home");
 });
-
-document.getElementById("btn-side-signout").addEventListener("click", () => signOutButton.click());
 
 // ---------- Scanner (inside the establishment dashboard) ----------
 async function lookup(token) {
