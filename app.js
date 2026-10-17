@@ -33,8 +33,18 @@ document.addEventListener("click", (e) => {
   const target = e.target.closest("[data-go]");
   if (!target) return;
   e.preventDefault();
+  if (target.dataset.kind) setLoginKind(target.dataset.kind);
   show(target.dataset.go);
 });
+
+// The log in page is shared; the entry point decides its wording and sign-up link.
+function setLoginKind(kind) {
+  const isAdmin = kind === "admin";
+  document.getElementById("login-title").textContent = isAdmin ? "Admin log in" : "Customer log in";
+  const link = document.getElementById("signup-link");
+  link.textContent = isAdmin ? "Partner with AllerLink" : "Sign up";
+  link.dataset.go = isAdmin ? "partner" : "privacy";
+}
 
 const formData = (form) => Object.fromEntries(new FormData(form));
 
