@@ -11,8 +11,14 @@
     <a href="#" data-go="home" class="brand"><img src="logo.png" alt="AllerLink Technologies"></a>
     <nav>
       <button data-go="home">Home</button>
-      <button data-go="login" data-kind="customer">Log in / Sign up</button>
-      <button data-go="login" data-kind="admin">Admin</button>
+      <div class="dropdown" id="login-menu">
+        <button type="button" class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">Log in / Sign up ▾</button>
+        <ul class="dropdown-menu" hidden>
+          <li><button data-go="login" data-kind="customer">User (Customer)</button></li>
+          <li><button data-go="login" data-kind="admin">Business</button></li>
+          <li><button data-go="login" data-kind="employee">Employee</button></li>
+        </ul>
+      </div>
       <button id="btn-signout" hidden>Sign out</button>
     </nav>
   </header>
@@ -24,6 +30,9 @@
         <button data-go="card"><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="20" height="14" x="2" y="5" rx="2"/><path d="M2 10h20"/></svg> My AllerCard</button>
         <button data-go="foods"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg> AllerFoods</button>
         <button data-go="wallet"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg> Wallet</button>
+      </div>
+      <div data-role="employee">
+        <button data-go="employee-home"><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg> Dashboard</button>
       </div>
       <div data-role="establishment">
         <button data-go="partner-home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Profile</button>
@@ -249,13 +258,13 @@
     </section>
 
     <section data-view="login" hidden>
-      <h2 id="login-title">Customer log in</h2>
+      <h2 id="login-title">User log in</h2>
       <form id="form-login">
         <label>Email <input name="email" type="email" required></label>
         <label>Password <input name="password" type="password" required></label>
         <button class="primary">Log in</button>
       </form>
-      <p>No account yet? <a href="#" id="signup-link" data-go="privacy">Sign up</a></p>
+      <p id="signup-line">No account yet? <a href="#" id="signup-link" data-go="privacy">Sign up</a></p>
     </section>
 
     <!-- PARTNER / BUSINESS DASHBOARD -->
@@ -331,6 +340,12 @@
         <label>Amount (₱) <input name="amount" type="number" min="1" step="0.01" required></label>
         <button class="primary" type="submit">Add to sales</button>
       </form>
+    </section>
+
+    <!-- EMPLOYEE DASHBOARD (placeholder) -->
+    <section data-view="employee-home" hidden>
+      <h2>Employee dashboard</h2>
+      <p class="note">Employee tools will appear here.</p>
     </section>
 
     <section data-view="dashboard" hidden>

@@ -12,8 +12,8 @@ const demo = {
 };
 
 // ---------- Navigation ----------
-const state = { customer: null, establishment: null, scanner: null, role: null }; // role: "customer" or "establishment"
-let loginKind = "customer"; // which login button was used
+const state = { customer: null, establishment: null, employee: null, scanner: null, role: null }; // role: "customer", "establishment" or "employee"
+let loginKind = "customer"; // "customer", "admin" (Business) or "employee"
 
 const viewHistory = []; // pages visited before the current one, for the Back button
 let currentView = "home";
@@ -25,11 +25,13 @@ const sideNav = document.getElementById("sidenav");
 const sideNavViews = {
   customer: ["card", "foods", "wallet", "delivery", "done"],
   establishment: ["partner-home", "partner-products", "partner-sales", "dashboard"],
+  employee: ["employee-home"],
 };
+const roleHome = { customer: "card", establishment: "dashboard", employee: "employee-home" };
 const customerViews = ["card", "foods", "wallet"]; // need a signed-in customer
 
 function show(view, { isBack = false, reset = false } = {}) {
-  if (view === "home" && state.role) view = state.role === "customer" ? "card" : "dashboard"; // signed-in users stay in their dashboard
+  if (view === "home" && state.role) view = roleHome[state.role]; // signed-in users stay in their dashboard
   if (customerViews.includes(view) && !state.customer) {
     setLoginKind("customer"); // signed-out visitors are sent to log in first
     view = "login";
@@ -75,14 +77,33 @@ document.addEventListener("click", (e) => {
 });
 
 // The log in page is shared; the entry point decides its wording and sign-up link.
+const loginTitles = { customer: "User log in", admin: "Business log in", employee: "Employee log in" };
+
 function setLoginKind(kind) {
-  loginKind = kind === "admin" ? "admin" : "customer";
+  loginKind = loginTitles[kind] ? kind : "customer";
   const isAdmin = loginKind === "admin";
-  document.getElementById("login-title").textContent = isAdmin ? "Admin log in" : "Customer log in";
+  document.getElementById("login-title").textContent = loginTitles[loginKind];
+  document.getElementById("signup-line").hidden = loginKind === "employee"; // employee accounts have no sign up
   const link = document.getElementById("signup-link");
   link.textContent = isAdmin ? "Partner with AllerLink" : "Sign up";
   link.dataset.go = isAdmin ? "partner" : "privacy";
 }
+
+// Log in / Sign up dropdown in the navbar
+const loginMenu = document.getElementById("login-menu");
+const loginToggle = loginMenu.querySelector(".dropdown-toggle");
+const loginList = loginMenu.querySelector(".dropdown-menu");
+
+function setLoginMenu(open) {
+  loginList.hidden = !open;
+  loginToggle.setAttribute("aria-expanded", open);
+}
+
+loginToggle.addEventListener("click", () => setLoginMenu(loginList.hidden));
+document.addEventListener("click", (e) => {
+  if (!loginMenu.contains(e.target) || e.target.closest("[data-go]")) setLoginMenu(false);
+});
+document.addEventListener("keydown", (e) => e.key === "Escape" && setLoginMenu(false));
 
 const formData = (form) => Object.fromEntries(new FormData(form));
 
@@ -269,7 +290,7 @@ const signOutButton = document.getElementById("btn-signout");
 const setSignedIn = (signedIn) => {
   signOutButton.hidden = !signedIn;
   // Signed-in users only see Sign out up here; everything else is in the side menu.
-  document.querySelectorAll("header nav [data-go]").forEach((button) => (button.hidden = signedIn));
+  document.querySelectorAll("header nav [data-go], #login-menu").forEach((item) => (item.hidden = signedIn));
 };
 
 async function loadEstablishment(userId) {
@@ -312,15 +333,30 @@ async function enterCustomer(userId) {
   return { ok: true, reason: "ok" };
 }
 
+async function enterEmployee(userId) {
+  // Needs an "employees" table (id = auth user id). Returns ok:false if this user is not in it.
+  const { data: employee } = await db.from("employees").select("*").eq("id", userId).maybeSingle();
+  if (!employee) return { ok: false, reason: "none" };
+  state.employee = employee;
+  state.role = "employee";
+  state.customer = null;
+  state.establishment = null;
+  setSignedIn(true);
+  show("employee-home", { reset: true });
+  return { ok: true, reason: "ok" };
+}
+
 async function accountKinds(userId) {
-  const [est, prof] = await Promise.all([
+  const [est, prof, emp] = await Promise.all([
     loadEstablishment(userId).catch(() => null),
     db.from("profiles").select("id").eq("id", userId).maybeSingle().then((r) => r.data).catch(() => null),
+    db.from("employees").select("id").eq("id", userId).maybeSingle().then((r) => r.data).catch(() => null),
   ]);
   return {
     partner: Boolean(est && est.active),
     partnerPending: Boolean(est && !est.active),
     customer: Boolean(prof),
+    employee: Boolean(emp),
   };
 }
 
@@ -341,6 +377,10 @@ async function restoreSession() {
       const r = await enterCustomer(userId);
       if (r.ok) return;
     }
+    if (last === "employee") {
+      const r = await enterEmployee(userId);
+      if (r.ok) return;
+    }
     const r1 = await enterEstablishment(userId, { quiet: true });
     if (r1.ok) return;
     await enterCustomer(userId);
@@ -352,6 +392,13 @@ async function restoreSession() {
 document.getElementById("form-login").addEventListener("submit", async (e) => {
   e.preventDefault();
   if (!db) {
+    if (loginKind === "employee") {
+      state.role = "employee";
+      state.employee = { id: "demo", email: "demo@employee.test" };
+      setSignedIn(true);
+      localStorage.setItem("allerlink-last-role", "employee");
+      return show("employee-home", { reset: true });
+    }
     if (loginKind === "admin") {
       state.role = "establishment";
       state.establishment = {
@@ -380,6 +427,17 @@ document.getElementById("form-login").addEventListener("submit", async (e) => {
   try {
     const kinds = await accountKinds(userId);
 
+    if (loginKind === "employee") {
+      if (!kinds.employee) {
+        await db.auth.signOut();
+        setSignedIn(false);
+        return alert("No employee account for this login.");
+      }
+      const r = await enterEmployee(userId);
+      if (r.ok) localStorage.setItem("allerlink-last-role", "employee");
+      return;
+    }
+
     if (loginKind === "admin") {
       // Admin gate: partners only — never open the guest AllerCard from this form.
       if (kinds.partnerPending) {
@@ -391,7 +449,7 @@ document.getElementById("form-login").addEventListener("submit", async (e) => {
         await db.auth.signOut();
         setSignedIn(false);
         return alert(kinds.customer
-          ? "This is a customer account. Use “Log in / Sign up”, not Admin."
+          ? "This is a customer account. Use “Log in / Sign up” → User (Customer)."
           : "No approved business account for this login.");
       }
       const r = await enterEstablishment(userId);
@@ -404,7 +462,7 @@ document.getElementById("form-login").addEventListener("submit", async (e) => {
       await db.auth.signOut();
       setSignedIn(false);
       return alert(kinds.partner || kinds.partnerPending
-        ? "This is a business account. Use the Admin button to sign in."
+        ? "This is a business account. Use “Log in / Sign up” → Business."
         : "This account has no customer profile yet. Sign up first.");
     }
     const r = await enterCustomer(userId);
@@ -420,6 +478,7 @@ signOutButton.addEventListener("click", async () => {
   state.role = null;
   state.customer = null;
   state.establishment = null;
+  state.employee = null;
   localStorage.removeItem("allerlink-last-role");
   resetCart();
   setSignedIn(false);
