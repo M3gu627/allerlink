@@ -87,8 +87,24 @@
         <div class="card-info">
           <h3>My information</h3>
           <form class="panel" id="form-edit">
+            <div class="avatar-wrap">
+              <img id="avatar-preview" src="" alt="Profile picture" class="avatar" hidden>
+              <div id="avatar-placeholder" class="avatar avatar-placeholder">?</div>
+              <label class="avatar-btn">
+                Change photo
+                <input type="file" id="avatar-input" accept="image/*" hidden>
+              </label>
+            </div>
+
             <label>Membership No. <input name="membership_no" readonly class="locked"></label>
             <label>Name or display name <input name="display_name" required></label>
+            <label>Gender
+              <select name="gender">
+                <option value="">Select…</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+              </select>
+            </label>
             <label>Birthday <input name="birthday" type="date" required></label>
             <label>Age <input name="age" readonly class="locked"></label>
             <label>Issue date <input name="issue_date" readonly class="locked"></label>

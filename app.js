@@ -156,6 +156,30 @@ document.getElementById("btn-download").addEventListener("click", async () => {
 const editForm = document.getElementById("form-edit");
 editForm.birthday.addEventListener("change", () => (editForm.age.value = ageFrom(editForm.birthday.value)));
 
+// Profile picture picker
+const avatarInput = document.getElementById("avatar-input");
+const avatarPreview = document.getElementById("avatar-preview");
+const avatarPlaceholder = document.getElementById("avatar-placeholder");
+
+avatarInput?.addEventListener("change", () => {
+  const file = avatarInput.files?.[0];
+  if (!file) return;
+  if (!file.type.startsWith("image/")) return alert("Please choose an image file.");
+  if (file.size > 2 * 1024 * 1024) return alert("Image must be under 2 MB.");
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    const dataUrl = reader.result;
+    avatarPreview.src = dataUrl;
+    avatarPreview.hidden = false;
+    avatarPlaceholder.hidden = true;
+    // Keep it in state so Save can persist it (base64 for now / demo)
+    if (state.customer) state.customer.avatar_url = dataUrl;
+  };
+  reader.readAsDataURL(file);
+});
+
+
 function fillEditForm() {
   const profile = state.customer;
   // Membership number derived from qr_token (matches the style shown on the card)
@@ -163,9 +187,10 @@ function fillEditForm() {
   const short = token.replace(/-/g, "").slice(0, 8).toUpperCase();
   editForm.membership_no.value = short ? `AP-2026-${short.slice(0, 4)}` : "";
 
-  editForm.display_name.value = profile.display_name;
-  editForm.birthday.value = profile.birthday;
-  editForm.age.value = ageFrom(profile.birthday);
+  editForm.display_name.value = profile.display_name || "";
+  editForm.gender.value = profile.gender || "";
+  editForm.birthday.value = profile.birthday || "";
+  editForm.age.value = profile.birthday ? ageFrom(profile.birthday) : "";
 
   // Locked dates – shown for reference (actual printed dates come from the card renderer)
   const today = new Date();
@@ -176,8 +201,21 @@ function fillEditForm() {
   editForm.issue_date.value = fmt(issue);
   editForm.valid_until.value = fmt(valid);
 
-  editForm.allergies.value = profile.allergies.join(", ");
+  editForm.allergies.value = (profile.allergies || []).join(", ");
   editForm.emergency_notes.value = profile.emergency_notes ?? "";
+
+  // Avatar
+  const preview = document.getElementById("avatar-preview");
+  const placeholder = document.getElementById("avatar-placeholder");
+  if (profile.avatar_url) {
+    preview.src = profile.avatar_url;
+    preview.hidden = false;
+    placeholder.hidden = true;
+  } else {
+    preview.hidden = true;
+    placeholder.hidden = false;
+    placeholder.textContent = (profile.display_name || "?").charAt(0).toUpperCase();
+  }
 }
 
 editForm.addEventListener("submit", async (e) => {
@@ -186,6 +224,8 @@ editForm.addEventListener("submit", async (e) => {
   // Ignore locked / display-only fields
   const { age, membership_no, issue_date, valid_until, allergies, ...rest } = data;
   const changes = { ...rest, allergies: parseAllergies(allergies) };
+  // Keep any locally chosen avatar
+  if (state.customer?.avatar_url) changes.avatar_url = state.customer.avatar_url;
   const { error } = await db.from("profiles").update(changes).eq("id", state.customer.id);
   if (error) return alert(error.message);
   state.customer = { ...state.customer, ...changes };

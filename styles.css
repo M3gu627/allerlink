@@ -138,6 +138,42 @@ button.ghost { background: #fff; color: var(--navy); border: 2px solid var(--nav
   cursor: default;
   border-color: #c8d4e4;
 }
+
+/* Profile avatar */
+.avatar-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.5rem;
+}
+.avatar {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--blue-light);
+  box-shadow: 0 2px 8px rgba(13, 42, 92, 0.12);
+  background: #e8eef7;
+}
+.avatar-placeholder {
+  display: grid;
+  place-items: center;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--navy);
+  background: var(--blue-light);
+}
+.avatar-btn {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--blue);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.avatar-btn:hover { color: var(--navy); }
+
 .card-visual {
   flex: 0 1 520px;
   min-width: 340px;
