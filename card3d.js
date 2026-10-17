@@ -51,16 +51,16 @@ const card3d = (() => {
       camera = new THREE.PerspectiveCamera(35, 1.6, 0.1, 100);
       camera.position.set(3, 2, 14); // slight tilt so it reads as 3D right away
 
-      scene.add(new THREE.HemisphereLight(0xffffff, 0xbfd8c8, 0.6));
+      scene.add(new THREE.HemisphereLight(0xffffff, 0xc8d6ee, 0.6));
       const sun = new THREE.DirectionalLight(0xffffff, 0.45);
       sun.position.set(3, 4, 6);
       scene.add(sun);
 
-      // A thin green body with a front and a back face laid on it.
+      // A thin navy body with a front and a back face laid on it.
       const shape = roundedRect(CARD.w, CARD.h, CARD.radius);
       const body = new THREE.Mesh(
         new THREE.ExtrudeGeometry(shape, { depth: CARD.depth, bevelEnabled: false }),
-        new THREE.MeshStandardMaterial({ color: 0x1b5e3a })
+        new THREE.MeshStandardMaterial({ color: 0x0d2a5c })
       );
       body.position.z = -CARD.depth / 2;
 
@@ -110,7 +110,13 @@ const card3d = (() => {
     },
     async open() { // call once the card page is visible, so the container has a size
       if (!profile) return;
-      const [frontCanvas, backCanvas] = await Promise.all([drawCardFace(profile), drawCardBack()]);
+      let frontCanvas, backCanvas;
+      try {
+        [frontCanvas, backCanvas] = await Promise.all([drawCardFace(profile), drawCardBack()]);
+      } catch (error) {
+        container().textContent = "The card artwork could not be loaded.";
+        return;
+      }
       if (!container().clientWidth) return; // the person already left this page
       if (!renderer && !build(frontCanvas, backCanvas)) return;
       updateFront(frontCanvas);
