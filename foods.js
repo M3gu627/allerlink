@@ -1,4 +1,4 @@
-// AllerFoods (allergy-aware food ordering), the wallet, and the customer home page.
+// AllerFoods (allergy-aware food ordering), the wallet, and the order history.
 // Uses db, state, show() and formData() from app.js.
 const peso = (n) => "₱" + Number(n).toFixed(2);
 const esc = (text) =>
@@ -25,15 +25,6 @@ const normalize = (word) => ALLERGEN_ALIASES[word.trim().toLowerCase()] ?? word.
 function conflicts(item) {
   const mine = state.customer.allergies.map(normalize);
   return item.allergens.filter((tag) => mine.includes(normalize(tag)));
-}
-
-// ---------- Customer home ----------
-function loadOverview() {
-  const profile = state.customer;
-  document.getElementById("greeting").textContent = `Good day, ${profile.display_name}!`;
-  document.getElementById("ov-allergies").innerHTML =
-    profile.allergies.map((a) => `<span class="chip">${esc(a)}</span>`).join("");
-  refreshWallet();
 }
 
 // ---------- AllerFoods ----------
@@ -103,24 +94,26 @@ document.getElementById("btn-place-order").addEventListener("click", async () =>
 async function refreshWallet() {
   const { data: wallet, error } = await db.rpc("get_wallet");
   if (error) return alert(error.message);
-  for (const prefix of ["ov", "w"]) {
-    document.getElementById(prefix + "-cash").textContent = peso(wallet.cash);
-    document.getElementById(prefix + "-points").textContent = wallet.points;
-  }
+  document.getElementById("w-cash").textContent = peso(wallet.cash);
+  document.getElementById("w-points").textContent = wallet.points;
 }
 
-async function loadWallet() {
+function loadWallet() {
   refreshWallet();
-  const { data } = await db
-    .from("food_orders")
-    .select("total, payment_method, points_earned, created_at")
-    .order("created_at", { ascending: false })
-    .limit(5);
-  document.getElementById("w-orders").innerHTML =
-    (data ?? [])
-      .map((o) => `<li>${new Date(o.created_at).toLocaleDateString()} · ${peso(o.total)} ·
-        ${esc(o.payment_method)} · +${o.points_earned} pts</li>`)
-      .join("") || "<li>No orders yet.</li>";
+}
+
+// Everything the customer has ordered: physical AllerCards and AllerFoods meals.
+async function loadHistory() {
+  const [foods, cards] = await Promise.all([
+    db.from("food_orders").select("total, payment_method, created_at").order("created_at", { ascending: false }),
+    db.from("orders").select("status, payment_method"),
+  ]);
+  const rows = [
+    ...(cards.data ?? []).map((o) => `<li>AllerCard order · ${esc(o.status)} · ${esc(o.payment_method ?? "")}</li>`),
+    ...(foods.data ?? []).map((o) => `<li>${new Date(o.created_at).toLocaleDateString()} · AllerFoods ·
+      ${peso(o.total)} · ${esc(o.payment_method)}</li>`),
+  ];
+  document.getElementById("history").innerHTML = rows.join("") || "<li>No orders yet.</li>";
 }
 
 document.getElementById("form-topup").addEventListener("submit", async (e) => {
