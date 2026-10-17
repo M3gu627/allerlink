@@ -18,9 +18,9 @@ const viewHistory = []; // pages visited before the current one, for the Back bu
 let currentView = "home";
 const backButton = document.getElementById("btn-back");
 
-function show(view, { isBack = false } = {}) {
+function show(view, { isBack = false, reset = false } = {}) {
   if (!isBack && view !== currentView) viewHistory.push(currentView);
-  if (view === "home") viewHistory.length = 0; // Home and sign out start a fresh trail
+  if (view === "home" || reset) viewHistory.length = 0; // Home, sign out, and landing pages start a fresh trail
   currentView = view;
   document.querySelectorAll("[data-view]").forEach((s) => (s.hidden = s.dataset.view !== view));
   backButton.hidden = viewHistory.length === 0;
@@ -58,34 +58,48 @@ document.getElementById("btn-consent").addEventListener("click", () => {
 
 const profileForm = document.getElementById("form-profile");
 
-profileForm.birthday.addEventListener("change", () => {
-  const born = new Date(profileForm.birthday.value);
-  profileForm.age.value = Math.floor((Date.now() - born) / (365.25 * 24 * 3600 * 1000));
-});
+const ageFrom = (date) => Math.floor((Date.now() - new Date(date)) / (365.25 * 24 * 3600 * 1000));
+
+profileForm.birthday.addEventListener("change", () => (profileForm.age.value = ageFrom(profileForm.birthday.value)));
+
+const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const parseAllergies = (text) => text.split(",").map((a) => a.trim()).filter(Boolean);
+
+function setSignupStatus(status) {
+  document.getElementById("signup-loading").hidden = status !== "loading";
+  document.getElementById("signup-success").hidden = status !== "success";
+}
+
+// Returns an error object, or null when the account was created.
+async function createAccount(profile, password) {
+  if (!db) {
+    demo.push("profiles", profile);
+    return null;
+  }
+  const { data, error } = await db.auth.signUp({ email: profile.email, password });
+  if (error) return error;
+  const { error: insertError } = await db.from("profiles").insert({ ...profile, id: data.user.id });
+  await db.auth.signOut(); // they sign in themselves on the next screen
+  return insertError;
+}
 
 profileForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   const { password, age, allergies, ...rest } = formData(profileForm);
   const profile = {
     ...rest,
-    allergies: allergies.split(",").map((a) => a.trim()).filter(Boolean),
+    allergies: parseAllergies(allergies),
     qr_token: crypto.randomUUID(), // random ID only: no allergy data goes inside the QR
   };
 
-  if (db) {
-    const { data, error } = await db.auth.signUp({ email: profile.email, password });
-    if (error) return alert(error.message);
-    const { error: insertError } = await db.from("profiles").insert({ ...profile, id: data.user.id });
-    if (insertError) return alert(insertError.message);
-    setSignedIn(true);
-  } else {
-    demo.push("profiles", profile);
+  show("signup-done", { reset: true });
+  setSignupStatus("loading");
+  const [error] = await Promise.all([createAccount(profile, password), pause(1200)]);
+  if (error) {
+    show("profile", { isBack: true });
+    return alert(error.message);
   }
-
-  state.customer = profile;
-  renderCard(profile);
-  document.getElementById("order-box").hidden = false; // new customers can still order
-  show("card");
+  setSignupStatus("success");
 });
 
 function renderCard(profile) {
@@ -95,6 +109,32 @@ function renderCard(profile) {
   qr.innerHTML = "";
   new QRCode(qr, { text: profile.qr_token, width: 120, height: 120 });
 }
+
+const editForm = document.getElementById("form-edit");
+editForm.birthday.addEventListener("change", () => (editForm.age.value = ageFrom(editForm.birthday.value)));
+
+document.getElementById("btn-edit").addEventListener("click", () => {
+  const profile = state.customer;
+  editForm.display_name.value = profile.display_name;
+  editForm.birthday.value = profile.birthday;
+  editForm.age.value = ageFrom(profile.birthday);
+  editForm.allergies.value = profile.allergies.join(", ");
+  editForm.emergency_notes.value = profile.emergency_notes ?? "";
+  show("edit");
+});
+
+editForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const { age, allergies, ...rest } = formData(editForm);
+  const changes = { ...rest, allergies: parseAllergies(allergies) };
+  const { error } = await db.from("profiles").update(changes).eq("id", state.customer.id);
+  if (error) return alert(error.message);
+  state.customer = { ...state.customer, ...changes };
+  renderCard(state.customer);
+  alert("Your information was updated.");
+  viewHistory.pop(); // drop the dashboard entry so Back does not loop
+  show("card", { isBack: true });
+});
 
 document.getElementById("form-delivery").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -127,7 +167,7 @@ const setSignedIn = (signedIn) => (signOutButton.hidden = !signedIn);
 
 document.getElementById("form-login").addEventListener("submit", async (e) => {
   e.preventDefault();
-  if (!db) return show("dashboard"); // demo mode has no accounts
+  if (!db) return show("dashboard", { reset: true }); // demo mode has no accounts
   const { email, password } = formData(e.target);
   const { data, error } = await db.auth.signInWithPassword({ email, password });
   if (error) return alert(error.message);
@@ -138,15 +178,15 @@ document.getElementById("form-login").addEventListener("submit", async (e) => {
   const { data: establishment } = await db.from("establishments").select("active").eq("id", userId).maybeSingle();
   if (establishment) {
     if (!establishment.active) return alert("Your establishment account has not been approved yet.");
-    return show("dashboard");
+    return show("dashboard", { reset: true });
   }
 
   // Customer account: show their own AllerCard QR again.
   const { data: profile } = await db.from("profiles").select("*").eq("id", userId).maybeSingle();
   if (profile) {
+    state.customer = profile;
     renderCard(profile);
-    document.getElementById("order-box").hidden = true; // returning customers only view their QR
-    return show("card");
+    return show("card", { reset: true });
   }
   alert("This account has no dashboard yet.");
 });
