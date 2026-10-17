@@ -81,24 +81,33 @@
 
     <section data-view="card" hidden>
       <h2>My AllerCard</h2>
-      <div id="card3d" aria-label="3D AllerCard. Drag to rotate."></div>
-      <p class="note">Drag the card to rotate it.</p>
-      <div id="card2d"></div>
-      <div class="actions">
-        <button class="ghost" id="btn-download">Download card</button>
-        <button class="primary" data-go="delivery">Order physical AllerCard</button>
-      </div>
-      <p class="note">AllerPass package: ₱199 per 3 months. Includes your AllerCard, profile updates anytime, and access at every participating establishment.</p>
 
-      <h3>My information</h3>
-      <form class="panel" id="form-edit">
-        <label>Name or display name <input name="display_name" required></label>
-        <label>Birthday <input name="birthday" type="date" required></label>
-        <label>Age <input name="age" readonly></label>
-        <label>Food allergies (separate with commas) <input name="allergies" required></label>
-        <label>Emergency notes (optional) <textarea name="emergency_notes" rows="2"></textarea></label>
-        <button class="primary">Save changes</button>
-      </form>
+      <div class="card-layout">
+        <!-- Left: My information -->
+        <div class="card-info">
+          <h3>My information</h3>
+          <form class="panel" id="form-edit">
+            <label>Name or display name <input name="display_name" required></label>
+            <label>Birthday <input name="birthday" type="date" required></label>
+            <label>Age <input name="age" readonly></label>
+            <label>Food allergies (separate with commas) <input name="allergies" required></label>
+            <label>Emergency notes (optional) <textarea name="emergency_notes" rows="2"></textarea></label>
+            <button class="primary">Save changes</button>
+          </form>
+        </div>
+
+        <!-- Right: Membership card -->
+        <div class="card-visual">
+          <div id="card3d" aria-label="3D AllerCard. Drag to rotate."></div>
+          <p class="note">Drag the card to rotate it.</p>
+          <div id="card2d"></div>
+          <div class="actions">
+            <button class="ghost" id="btn-download">Download card</button>
+            <button class="primary" data-go="delivery">Order physical AllerCard</button>
+          </div>
+          <p class="note">AllerPass package: ₱199 per 3 months. Includes your AllerCard, profile updates anytime, and access at every participating establishment.</p>
+        </div>
+      </div>
 
       <h3>Order history</h3>
       <div class="panel"><ul id="history"></ul></div>
