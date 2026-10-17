@@ -284,14 +284,12 @@ async function loadEstablishment(userId) {
   return data;
 }
 
-async function enterEstablishment(userId) {
+async function enterEstablishment(userId, { quiet = false } = {}) {
   const establishment = await loadEstablishment(userId);
-  if (!establishment) return false;
+  if (!establishment) return { ok: false, reason: "none" };
   if (!establishment.active) {
-    alert("Your establishment account has not been approved yet.");
-    await db.auth.signOut();
-    setSignedIn(false);
-    return true; // handled
+    if (!quiet) alert("Your establishment account has not been approved yet.");
+    return { ok: false, reason: "pending" };
   }
   state.establishment = establishment;
   state.role = "establishment";
@@ -299,19 +297,31 @@ async function enterEstablishment(userId) {
   setSignedIn(true);
   show("partner-home", { reset: true });
   updateStats();
-  return true;
+  return { ok: true, reason: "ok" };
 }
 
 async function enterCustomer(userId) {
   const { data: profile } = await db.from("profiles").select("*").eq("id", userId).maybeSingle();
-  if (!profile) return false;
+  if (!profile) return { ok: false, reason: "none" };
   state.customer = profile;
   state.role = "customer";
   state.establishment = null;
   setSignedIn(true);
   renderCard(profile);
   show("card", { reset: true });
-  return true;
+  return { ok: true, reason: "ok" };
+}
+
+async function accountKinds(userId) {
+  const [est, prof] = await Promise.all([
+    loadEstablishment(userId).catch(() => null),
+    db.from("profiles").select("id").eq("id", userId).maybeSingle().then((r) => r.data).catch(() => null),
+  ]);
+  return {
+    partner: Boolean(est && est.active),
+    partnerPending: Boolean(est && !est.active),
+    customer: Boolean(prof),
+  };
 }
 
 // Restore session on page load so the user stays signed in until they sign out.
@@ -321,7 +331,18 @@ async function restoreSession() {
   if (!session) return;
   const userId = session.user.id;
   try {
-    if (await enterEstablishment(userId)) return;
+    // Prefer last explicit choice when both exist; otherwise partner if active, else customer.
+    const last = localStorage.getItem("allerlink-last-role");
+    if (last === "establishment") {
+      const r = await enterEstablishment(userId, { quiet: true });
+      if (r.ok) return;
+    }
+    if (last === "customer") {
+      const r = await enterCustomer(userId);
+      if (r.ok) return;
+    }
+    const r1 = await enterEstablishment(userId, { quiet: true });
+    if (r1.ok) return;
     await enterCustomer(userId);
   } catch (err) {
     console.warn(err);
@@ -331,7 +352,6 @@ async function restoreSession() {
 document.getElementById("form-login").addEventListener("submit", async (e) => {
   e.preventDefault();
   if (!db) {
-    // Demo mode: Admin opens partner desk, Customer opens card-style flow.
     if (loginKind === "admin") {
       state.role = "establishment";
       state.establishment = {
@@ -344,8 +364,10 @@ document.getElementById("form-login").addEventListener("submit", async (e) => {
         email: "demo@partner.test",
         phone: "0917 000 0000",
         notes: "",
+        logo_url: "",
       };
       setSignedIn(true);
+      localStorage.setItem("allerlink-last-role", "establishment");
       return show("partner-home", { reset: true });
     }
     return show("card", { reset: true });
@@ -356,22 +378,37 @@ document.getElementById("form-login").addEventListener("submit", async (e) => {
   const userId = data.user.id;
 
   try {
+    const kinds = await accountKinds(userId);
+
     if (loginKind === "admin") {
-      const ok = await enterEstablishment(userId);
-      if (!ok) {
+      // Admin gate: partners only — never open the guest AllerCard from this form.
+      if (kinds.partnerPending) {
         await db.auth.signOut();
         setSignedIn(false);
-        return alert("No approved business account for this login. Use Admin after your partner application is approved, or create an establishments row with active = true.");
+        return alert("Your business account is not approved yet.");
       }
+      if (!kinds.partner) {
+        await db.auth.signOut();
+        setSignedIn(false);
+        return alert(kinds.customer
+          ? "This is a customer account. Use “Log in / Sign up”, not Admin."
+          : "No approved business account for this login.");
+      }
+      const r = await enterEstablishment(userId);
+      if (r.ok) localStorage.setItem("allerlink-last-role", "establishment");
       return;
     }
-    // Customer login prefers the guest profile.
-    if (await enterCustomer(userId)) return;
-    // If they only have a business account, send them there.
-    if (await enterEstablishment(userId)) return;
-    await db.auth.signOut();
-    setSignedIn(false);
-    alert("This account has no dashboard yet.");
+
+    // Customer gate: guests only — never open the partner desk from this form.
+    if (!kinds.customer) {
+      await db.auth.signOut();
+      setSignedIn(false);
+      return alert(kinds.partner || kinds.partnerPending
+        ? "This is a business account. Use the Admin button to sign in."
+        : "This account has no customer profile yet. Sign up first.");
+    }
+    const r = await enterCustomer(userId);
+    if (r.ok) localStorage.setItem("allerlink-last-role", "customer");
   } catch (err) {
     alert(err.message || String(err));
   }
@@ -383,6 +420,7 @@ signOutButton.addEventListener("click", async () => {
   state.role = null;
   state.customer = null;
   state.establishment = null;
+  localStorage.removeItem("allerlink-last-role");
   resetCart();
   setSignedIn(false);
   show("home");
@@ -457,6 +495,21 @@ const readPartnerList = (kind) => {
 const writePartnerList = (kind, rows) => localStorage.setItem(partnerStoreKey(kind), JSON.stringify(rows));
 const pesoFmt = (n) => `₱${Number(n || 0).toLocaleString("en-PH", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
 
+function setBizAvatar(url, name) {
+  const preview = document.getElementById("biz-avatar-preview");
+  const placeholder = document.getElementById("biz-avatar-placeholder");
+  if (!preview || !placeholder) return;
+  if (url) {
+    preview.src = url;
+    preview.hidden = false;
+    placeholder.hidden = true;
+  } else {
+    preview.hidden = true;
+    placeholder.hidden = false;
+    placeholder.textContent = (name || "B").charAt(0).toUpperCase();
+  }
+}
+
 function fillPartnerProfile() {
   const est = state.establishment || {};
   const form = document.getElementById("form-partner-profile");
@@ -468,14 +521,30 @@ function fillPartnerProfile() {
   form.email.value = est.email || "";
   form.phone.value = est.phone || "";
   form.notes.value = est.notes || "";
+  setBizAvatar(est.logo_url, est.business_name);
   document.getElementById("partner-status").textContent = est.active ? "Active" : "Pending";
   document.getElementById("partner-scan-count").textContent =
     document.getElementById("stat-total")?.textContent || "0";
 }
 
+document.getElementById("biz-avatar-input")?.addEventListener("change", () => {
+  const file = document.getElementById("biz-avatar-input").files?.[0];
+  if (!file) return;
+  if (!file.type.startsWith("image/")) return alert("Please choose an image file.");
+  if (file.size > 2 * 1024 * 1024) return alert("Image must be under 2 MB.");
+  const reader = new FileReader();
+  reader.onload = () => {
+    const dataUrl = reader.result;
+    if (state.establishment) state.establishment.logo_url = dataUrl;
+    setBizAvatar(dataUrl, state.establishment?.business_name);
+  };
+  reader.readAsDataURL(file);
+});
+
 document.getElementById("form-partner-profile")?.addEventListener("submit", async (e) => {
   e.preventDefault();
   const payload = formData(e.target);
+  if (state.establishment?.logo_url) payload.logo_url = state.establishment.logo_url;
   const msg = document.getElementById("partner-profile-msg");
   state.establishment = { ...(state.establishment || {}), ...payload };
   if (!db || state.establishment.id === "demo") {
@@ -485,7 +554,7 @@ document.getElementById("form-partner-profile")?.addEventListener("submit", asyn
   }
   const { error } = await db.from("establishments").update(payload).eq("id", state.establishment.id);
   msg.textContent = error
-    ? (error.message + " — if columns are missing, run partner-dashboard.sql")
+    ? (error.message + " — run the SQL below to add logo_url if needed")
     : "Profile saved.";
 });
 

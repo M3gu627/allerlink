@@ -263,6 +263,14 @@
       <h2>Business profile</h2>
       <p class="note">Your restaurant or café account on AllerLink. Guests never see this page.</p>
       <form class="panel" id="form-partner-profile">
+        <div class="avatar-wrap">
+          <img id="biz-avatar-preview" src="" alt="Business logo" class="avatar" hidden>
+          <div id="biz-avatar-placeholder" class="avatar avatar-placeholder">B</div>
+          <label class="avatar-btn">
+            Change business photo
+            <input type="file" id="biz-avatar-input" accept="image/*" hidden>
+          </label>
+        </div>
         <label>Business name <input name="business_name" required></label>
         <label>Business type
           <select name="business_type">
