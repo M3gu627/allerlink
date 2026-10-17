@@ -12,7 +12,8 @@ const demo = {
 };
 
 // ---------- Navigation ----------
-const state = { customer: null, scanner: null, role: null }; // role: "customer" or "establishment"
+const state = { customer: null, establishment: null, scanner: null, role: null }; // role: "customer" or "establishment"
+let loginKind = "customer"; // which login button was used
 
 const viewHistory = []; // pages visited before the current one, for the Back button
 let currentView = "home";
@@ -23,7 +24,7 @@ const sideNav = document.getElementById("sidenav");
 // Pages that show the dashboard side menu, per account type.
 const sideNavViews = {
   customer: ["card", "foods", "wallet", "delivery", "done"],
-  establishment: ["dashboard"],
+  establishment: ["partner-home", "partner-products", "partner-sales", "dashboard"],
 };
 const customerViews = ["card", "foods", "wallet"]; // need a signed-in customer
 
@@ -44,6 +45,9 @@ function show(view, { isBack = false, reset = false } = {}) {
   }
   if (view === "foods") loadFoods();
   if (view === "wallet") loadWallet();
+  if (view === "partner-home") fillPartnerProfile();
+  if (view === "partner-products") renderProducts();
+  if (view === "partner-sales") renderPartnerSales();
 
   const showSide = Boolean(sideNavViews[state.role]?.includes(view));
   layout.classList.toggle("with-side", showSide);
@@ -72,7 +76,8 @@ document.addEventListener("click", (e) => {
 
 // The log in page is shared; the entry point decides its wording and sign-up link.
 function setLoginKind(kind) {
-  const isAdmin = kind === "admin";
+  loginKind = kind === "admin" ? "admin" : "customer";
+  const isAdmin = loginKind === "admin";
   document.getElementById("login-title").textContent = isAdmin ? "Admin log in" : "Customer log in";
   const link = document.getElementById("signup-link");
   link.textContent = isAdmin ? "Partner with AllerLink" : "Sign up";
@@ -267,60 +272,109 @@ const setSignedIn = (signedIn) => {
   document.querySelectorAll("header nav [data-go]").forEach((button) => (button.hidden = signedIn));
 };
 
+async function loadEstablishment(userId) {
+  // Prefer full row; fall back to active-only if extra columns are missing.
+  let { data, error } = await db.from("establishments").select("*").eq("id", userId).maybeSingle();
+  if (error) {
+    const fallback = await db.from("establishments").select("id, active").eq("id", userId).maybeSingle();
+    data = fallback.data;
+    error = fallback.error;
+  }
+  if (error) throw error;
+  return data;
+}
+
+async function enterEstablishment(userId) {
+  const establishment = await loadEstablishment(userId);
+  if (!establishment) return false;
+  if (!establishment.active) {
+    alert("Your establishment account has not been approved yet.");
+    await db.auth.signOut();
+    setSignedIn(false);
+    return true; // handled
+  }
+  state.establishment = establishment;
+  state.role = "establishment";
+  state.customer = null;
+  setSignedIn(true);
+  show("partner-home", { reset: true });
+  updateStats();
+  return true;
+}
+
+async function enterCustomer(userId) {
+  const { data: profile } = await db.from("profiles").select("*").eq("id", userId).maybeSingle();
+  if (!profile) return false;
+  state.customer = profile;
+  state.role = "customer";
+  state.establishment = null;
+  setSignedIn(true);
+  renderCard(profile);
+  show("card", { reset: true });
+  return true;
+}
+
 // Restore session on page load so the user stays signed in until they sign out.
 async function restoreSession() {
   if (!db) return;
   const { data: { session } } = await db.auth.getSession();
   if (!session) return;
-
-  setSignedIn(true);
   const userId = session.user.id;
-
-  // Establishment account
-  const { data: establishment } = await db.from("establishments").select("active").eq("id", userId).maybeSingle();
-  if (establishment) {
-    if (!establishment.active) return; // not approved yet
-    state.role = "establishment";
-    show("dashboard", { reset: true });
-    return;
-  }
-
-  // Customer account
-  const { data: profile } = await db.from("profiles").select("*").eq("id", userId).maybeSingle();
-  if (profile) {
-    state.customer = profile;
-    state.role = "customer";
-    renderCard(profile);
-    show("card", { reset: true });
+  try {
+    if (await enterEstablishment(userId)) return;
+    await enterCustomer(userId);
+  } catch (err) {
+    console.warn(err);
   }
 }
 
 document.getElementById("form-login").addEventListener("submit", async (e) => {
   e.preventDefault();
-  if (!db) return show("dashboard", { reset: true }); // demo mode has no accounts
+  if (!db) {
+    // Demo mode: Admin opens partner desk, Customer opens card-style flow.
+    if (loginKind === "admin") {
+      state.role = "establishment";
+      state.establishment = {
+        id: "demo",
+        active: true,
+        business_name: "Demo Café",
+        business_type: "Café",
+        address: "Bustos, Bulacan",
+        contact_person: "Demo Owner",
+        email: "demo@partner.test",
+        phone: "0917 000 0000",
+        notes: "",
+      };
+      setSignedIn(true);
+      return show("partner-home", { reset: true });
+    }
+    return show("card", { reset: true });
+  }
   const { email, password } = formData(e.target);
   const { data, error } = await db.auth.signInWithPassword({ email, password });
   if (error) return alert(error.message);
-  setSignedIn(true);
   const userId = data.user.id;
 
-  // Establishment account: open the dashboard (with the scanner) once approved.
-  const { data: establishment } = await db.from("establishments").select("active").eq("id", userId).maybeSingle();
-  if (establishment) {
-    if (!establishment.active) return alert("Your establishment account has not been approved yet.");
-    state.role = "establishment";
-    return show("dashboard", { reset: true });
+  try {
+    if (loginKind === "admin") {
+      const ok = await enterEstablishment(userId);
+      if (!ok) {
+        await db.auth.signOut();
+        setSignedIn(false);
+        return alert("No approved business account for this login. Use Admin after your partner application is approved, or create an establishments row with active = true.");
+      }
+      return;
+    }
+    // Customer login prefers the guest profile.
+    if (await enterCustomer(userId)) return;
+    // If they only have a business account, send them there.
+    if (await enterEstablishment(userId)) return;
+    await db.auth.signOut();
+    setSignedIn(false);
+    alert("This account has no dashboard yet.");
+  } catch (err) {
+    alert(err.message || String(err));
   }
-
-  // Customer account: show their own AllerCard QR again.
-  const { data: profile } = await db.from("profiles").select("*").eq("id", userId).maybeSingle();
-  if (profile) {
-    state.customer = profile;
-    state.role = "customer";
-    renderCard(profile);
-    return show("card", { reset: true });
-  }
-  alert("This account has no dashboard yet.");
 });
 
 signOutButton.addEventListener("click", async () => {
@@ -328,6 +382,7 @@ signOutButton.addEventListener("click", async () => {
   document.getElementById("result").hidden = true;
   state.role = null;
   state.customer = null;
+  state.establishment = null;
   resetCart();
   setSignedIn(false);
   show("home");
@@ -388,3 +443,228 @@ async function updateStats() {
 updateStats();
 
 restoreSession();
+
+
+// ---------- Partner desk: profile, products, sales ----------
+const partnerStoreKey = (kind) => {
+  const id = state.establishment?.id || "demo";
+  return `allerlink-partner-${kind}-${id}`;
+};
+const readPartnerList = (kind) => {
+  try { return JSON.parse(localStorage.getItem(partnerStoreKey(kind)) || "[]"); }
+  catch { return []; }
+};
+const writePartnerList = (kind, rows) => localStorage.setItem(partnerStoreKey(kind), JSON.stringify(rows));
+const pesoFmt = (n) => `₱${Number(n || 0).toLocaleString("en-PH", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+
+function fillPartnerProfile() {
+  const est = state.establishment || {};
+  const form = document.getElementById("form-partner-profile");
+  if (!form) return;
+  form.business_name.value = est.business_name || "";
+  form.business_type.value = est.business_type || "Restaurant";
+  form.address.value = est.address || "";
+  form.contact_person.value = est.contact_person || "";
+  form.email.value = est.email || "";
+  form.phone.value = est.phone || "";
+  form.notes.value = est.notes || "";
+  document.getElementById("partner-status").textContent = est.active ? "Active" : "Pending";
+  document.getElementById("partner-scan-count").textContent =
+    document.getElementById("stat-total")?.textContent || "0";
+}
+
+document.getElementById("form-partner-profile")?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const payload = formData(e.target);
+  const msg = document.getElementById("partner-profile-msg");
+  state.establishment = { ...(state.establishment || {}), ...payload };
+  if (!db || state.establishment.id === "demo") {
+    writePartnerList("profile", [state.establishment]);
+    msg.textContent = "Profile saved on this device.";
+    return;
+  }
+  const { error } = await db.from("establishments").update(payload).eq("id", state.establishment.id);
+  msg.textContent = error
+    ? (error.message + " — if columns are missing, run partner-dashboard.sql")
+    : "Profile saved.";
+});
+
+async function loadProducts() {
+  if (db && state.establishment?.id && state.establishment.id !== "demo") {
+    const { data, error } = await db
+      .from("partner_products")
+      .select("*")
+      .eq("establishment_id", state.establishment.id)
+      .order("id", { ascending: false });
+    if (!error && data) return data;
+  }
+  return readPartnerList("products");
+}
+
+async function renderProducts() {
+  const list = document.getElementById("product-list");
+  if (!list) return;
+  const products = await loadProducts();
+  list.replaceChildren();
+  if (!products.length) {
+    list.innerHTML = '<p class="note">No products yet. Add your first dish above.</p>';
+    return;
+  }
+  for (const p of products) {
+    const card = document.createElement("article");
+    card.className = "panel product-card";
+    const allergens = Array.isArray(p.allergens) ? p.allergens.join(", ") : (p.allergens || "");
+    card.innerHTML = `
+      <div class="product-head">
+        <div>
+          <strong></strong>
+          <p class="meta"></p>
+          <p class="meta"></p>
+        </div>
+        <button type="button" class="ghost danger-btn">Remove</button>
+      </div>`;
+    card.querySelector("strong").textContent = `${p.name} · ${pesoFmt(p.price)}`;
+    card.querySelectorAll(".meta")[0].textContent = p.ingredients ? `Ingredients: ${p.ingredients}` : "No ingredients listed";
+    card.querySelectorAll(".meta")[1].textContent = allergens ? `Allergens: ${allergens}` : "Allergens: none listed";
+    card.querySelector("button").addEventListener("click", async () => {
+      if (!confirm(`Remove “${p.name}”?`)) return;
+      if (db && state.establishment?.id && state.establishment.id !== "demo" && p.id && !String(p.id).startsWith("local-")) {
+        const { error } = await db.from("partner_products").delete().eq("id", p.id);
+        if (error) return alert(error.message);
+      } else {
+        writePartnerList("products", (await loadProducts()).filter((row) => row.id !== p.id));
+      }
+      renderProducts();
+    });
+    list.append(card);
+  }
+}
+
+document.getElementById("form-product")?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const body = formData(e.target);
+  const allergens = String(body.allergens || "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const row = {
+    name: body.name,
+    price: Number(body.price),
+    ingredients: body.ingredients || "",
+    allergens,
+  };
+  if (db && state.establishment?.id && state.establishment.id !== "demo") {
+    const { error } = await db.from("partner_products").insert({
+      ...row,
+      establishment_id: state.establishment.id,
+    });
+    if (error) {
+      // Fall back to local if table is missing
+      row.id = "local-" + crypto.randomUUID();
+      writePartnerList("products", [row, ...readPartnerList("products")]);
+      alert(error.message + " — saved on this device for now. Run partner-dashboard.sql to store in Supabase.");
+    }
+  } else {
+    row.id = "local-" + crypto.randomUUID();
+    writePartnerList("products", [row, ...readPartnerList("products")]);
+  }
+  e.target.reset();
+  renderProducts();
+});
+
+let salesRange = "daily";
+
+function startOfRange(range, now = new Date()) {
+  const d = new Date(now);
+  if (range === "yearly") { d.setMonth(0, 1); d.setHours(0, 0, 0, 0); return d; }
+  if (range === "monthly") { d.setDate(1); d.setHours(0, 0, 0, 0); return d; }
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+async function loadSalesRows() {
+  let rows = readPartnerList("sales");
+  if (db && state.establishment?.id && state.establishment.id !== "demo") {
+    const { data, error } = await db
+      .from("partner_sales")
+      .select("*")
+      .eq("establishment_id", state.establishment.id)
+      .order("created_at", { ascending: false });
+    if (!error && data) {
+      rows = data.map((r) => ({
+        id: r.id,
+        note: r.note || "Sale",
+        amount: Number(r.amount),
+        created_at: r.created_at,
+      }));
+    }
+  }
+  return rows;
+}
+
+async function renderPartnerSales() {
+  const rows = await loadSalesRows();
+  const from = startOfRange(salesRange).getTime();
+  const filtered = rows.filter((r) => new Date(r.created_at || r.at || 0).getTime() >= from);
+  const total = filtered.reduce((s, r) => s + Number(r.amount || 0), 0);
+  document.getElementById("sales-label").textContent =
+    salesRange === "daily" ? "Today" : salesRange === "monthly" ? "This month" : "This year";
+  document.getElementById("sales-total").textContent = pesoFmt(total);
+  document.getElementById("sales-count").textContent = String(filtered.length);
+  document.getElementById("sales-avg").textContent = pesoFmt(filtered.length ? total / filtered.length : 0);
+  const body = document.getElementById("sales-rows");
+  body.replaceChildren();
+  if (!filtered.length) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = '<td colspan="3" class="note">No sales in this range yet.</td>';
+    body.append(tr);
+    return;
+  }
+  for (const r of filtered) {
+    const tr = document.createElement("tr");
+    const when = new Date(r.created_at || r.at || Date.now());
+    tr.innerHTML = "<td></td><td></td><td></td>";
+    tr.children[0].textContent = when.toLocaleString();
+    tr.children[1].textContent = r.note || "Sale";
+    tr.children[2].textContent = pesoFmt(r.amount);
+    body.append(tr);
+  }
+}
+
+document.getElementById("sales-range")?.addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-range]");
+  if (!btn) return;
+  salesRange = btn.dataset.range;
+  document.querySelectorAll("#sales-range [data-range]").forEach((b) => {
+    b.setAttribute("aria-pressed", String(b === btn));
+  });
+  renderPartnerSales();
+});
+
+document.getElementById("form-manual-sale")?.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const body = formData(e.target);
+  const row = {
+    note: body.note,
+    amount: Number(body.amount),
+    created_at: new Date().toISOString(),
+  };
+  if (db && state.establishment?.id && state.establishment.id !== "demo") {
+    const { error } = await db.from("partner_sales").insert({
+      establishment_id: state.establishment.id,
+      note: row.note,
+      amount: row.amount,
+    });
+    if (error) {
+      row.id = "local-" + crypto.randomUUID();
+      writePartnerList("sales", [row, ...readPartnerList("sales")]);
+      alert(error.message + " — saved on this device for now. Run partner-dashboard.sql for cloud storage.");
+    }
+  } else {
+    row.id = "local-" + crypto.randomUUID();
+    writePartnerList("sales", [row, ...readPartnerList("sales")]);
+  }
+  e.target.reset();
+  renderPartnerSales();
+});
+

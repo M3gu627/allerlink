@@ -151,3 +151,19 @@ button.ghost { background: #fff; color: var(--navy); border: 2px solid var(--nav
   .card-layout { flex-direction: column; align-items: center; }
   .card-info, .card-visual { width: 100%; max-width: 480px; }
 }
+
+/* Partner desk */
+.list-stack { display: grid; gap: .75rem; margin-top: 1rem; }
+.product-card .product-head { display: flex; justify-content: space-between; gap: 1rem; align-items: start; }
+.product-card .meta { margin: .25rem 0 0; font-size: .9rem; color: #5a6b7a; }
+.danger-btn { color: #a12626 !important; border-color: #a12626 !important; }
+.filters { display: flex; flex-wrap: wrap; gap: .5rem; margin: 0 0 1rem; }
+.filters button {
+  min-height: 40px; border-radius: 999px; border: 1px solid var(--line);
+  background: #fff; color: var(--navy); font-weight: 700; padding: .35rem 1rem;
+}
+.filters button[aria-pressed="true"] { background: var(--navy); color: #fff; border-color: var(--navy); }
+.table-wrap { overflow-x: auto; }
+.table-wrap table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+.table-wrap th, .table-wrap td { text-align: left; padding: .65rem .5rem; border-top: 1px solid var(--line); }
+.table-wrap th { color: #5a6b7a; font-size: .75rem; text-transform: uppercase; }
