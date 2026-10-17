@@ -11,6 +11,7 @@
     <a href="#" data-go="home" class="brand">AllerLink <small>Technologies</small></a>
     <nav>
       <button data-go="home">Home</button>
+      <button data-go="foods">AllerFoods</button>
       <button data-go="login" data-kind="customer">Log in / Sign up</button>
       <button data-go="login" data-kind="admin">Admin</button>
       <button id="btn-signout" hidden>Sign out</button>
@@ -19,9 +20,12 @@
 
   <div class="layout" id="layout">
     <aside id="sidenav" aria-label="Dashboard menu" hidden>
+      <img class="side-logo" src="assets/logo.png" alt="AllerLink Technologies">
       <div data-role="customer">
+        <button data-go="overview"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg> Home</button>
         <button data-go="card"><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="20" height="14" x="2" y="5" rx="2"/><path d="M2 10h20"/></svg> My AllerCard</button>
-        <button data-go="delivery"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg> Order AllerCard</button>
+        <button data-go="foods"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg> AllerFoods</button>
+        <button data-go="wallet"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg> Wallet</button>
         <button data-go="edit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></svg> Edit Information</button>
       </div>
       <div data-role="establishment">
@@ -89,6 +93,71 @@
       <div class="actions"><button class="primary" data-go="delivery">Order physical AllerCard</button></div>
     </section>
 
+    <section data-view="overview" hidden>
+      <h2 id="greeting">Good day!</h2>
+      <p class="note">Here is your food safety at a glance.</p>
+      <div class="stats">
+        <div class="stat"><small>Wallet cash</small><b id="ov-cash">₱0.00</b></div>
+        <div class="stat"><small>Points</small><b id="ov-points">0</b></div>
+      </div>
+      <div class="panel">
+        <h3>My allergy profile</h3>
+        <div class="chips" id="ov-allergies"></div>
+      </div>
+      <div class="panel">
+        <h3>Quick actions</h3>
+        <div class="actions">
+          <button class="primary" data-go="foods">Order food</button>
+          <button class="ghost" data-go="card">View my AllerCard</button>
+          <button class="ghost" data-go="wallet">Open wallet</button>
+        </div>
+      </div>
+    </section>
+
+    <section data-view="foods" hidden>
+      <h2>AllerFoods</h2>
+      <p class="note">Dishes are checked against your allergy profile. Allergen tags come from the restaurants, so please still confirm with them. AllerFoods cannot guarantee an allergen-free meal.</p>
+      <div id="menu"></div>
+      <div class="panel">
+        <h3>Your order</h3>
+        <ul id="cart-lines"></ul>
+        <p>Total: <b id="cart-total">₱0.00</b> · You earn <b id="cart-points">0</b> points</p>
+        <label>Payment method
+          <select id="pay-method">
+            <option value="wallet">AllerPass Wallet</option>
+            <option value="gcash">GCash</option>
+            <option value="maya">Maya</option>
+            <option value="card">Credit or debit card</option>
+            <option value="cod">Cash on delivery</option>
+          </select>
+        </label>
+        <button class="primary" id="btn-place-order">Place order</button>
+      </div>
+    </section>
+
+    <section data-view="wallet" hidden>
+      <h2>Wallet</h2>
+      <div class="stats">
+        <div class="stat"><small>Cash balance</small><b id="w-cash">₱0.00</b></div>
+        <div class="stat"><small>Points</small><b id="w-points">0</b></div>
+      </div>
+      <p class="note">You earn 1 point for every ₱10 you spend on AllerFoods.</p>
+      <form class="panel" id="form-topup">
+        <h3>Add cash</h3>
+        <label>Amount (₱) <input name="amount" type="number" min="50" max="10000" step="50" required></label>
+        <label>Pay with
+          <select name="method">
+            <option value="gcash">GCash</option>
+            <option value="maya">Maya</option>
+            <option value="card">Credit or debit card</option>
+          </select>
+        </label>
+        <button class="primary">Add cash</button>
+        <small>Demo: payments are simulated. Real money needs a payment gateway such as PayMongo.</small>
+      </form>
+      <div class="panel"><h3>Recent orders</h3><ul id="w-orders"></ul></div>
+    </section>
+
     <section data-view="signup-done" hidden>
       <div class="status" id="signup-loading">
         <div class="spinner" aria-hidden="true"></div>
@@ -123,6 +192,14 @@
         <label>Province <input name="province" required></label>
         <label>ZIP code <input name="zip" required></label>
         <label>Delivery instructions (optional) <textarea name="notes" rows="2"></textarea></label>
+        <label>Payment method
+          <select name="payment_method">
+            <option value="gcash">GCash</option>
+            <option value="maya">Maya</option>
+            <option value="card">Credit or debit card</option>
+            <option value="cod">Cash on delivery</option>
+          </select>
+        </label>
         <button class="primary">Place order</button>
       </form>
     </section>
@@ -169,6 +246,7 @@
 
     <section data-view="dashboard" hidden>
       <h2>Establishment dashboard</h2>
+      <div class="stats"><div class="stat"><small>Total scans</small><b id="stat-total">0</b></div></div>
       <div class="panel">
         <h3>Scan an AllerCard</h3>
         <div id="reader"></div>
@@ -184,10 +262,6 @@
         <p class="note">Verify ingredients and cross-contact before serving. This view closes when you press done.</p>
         <button class="ghost" id="btn-close">Done</button>
       </div>
-      <div class="panel">
-        <h3>Usage</h3>
-        <p>Total scans: <b id="stat-total">0</b></p>
-      </div>
     </section>
   </main>
   </div>
@@ -197,7 +271,9 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="cardart.js"></script>
   <script src="card3d.js"></script>
   <script src="app.js"></script>
+  <script src="foods.js"></script>
 </body>
 </html>
