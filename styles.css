@@ -170,3 +170,90 @@ button.ghost { background: #fff; color: var(--navy); border: 2px solid var(--nav
 
 .card-zoom-actions { justify-content: center; margin: 0.5rem 0 0.75rem; }
 #zoom-layer[hidden] { display: none !important; }
+
+/* AllerFoods restaurants */
+.rest-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 0.85rem;
+  margin: 0.75rem 0 1.25rem;
+}
+.rest-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 1rem 0.75rem;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: center;
+  font: inherit;
+  color: var(--ink);
+}
+.rest-card:hover { border-color: var(--blue); box-shadow: 0 2px 8px rgba(13,42,92,.1); }
+.rest-logo {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--blue-light);
+  background: #e8eef7;
+}
+.rest-logo-fallback {
+  display: grid;
+  place-items: center;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--navy);
+}
+.rest-name { font-weight: 700; color: var(--navy); font-size: 0.95rem; }
+.rest-meta { font-size: 0.8rem; color: #5a6b7a; }
+.rest-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  margin: 0.5rem 0 1rem;
+}
+.back-inline {
+  background: none;
+  border: 0;
+  color: var(--navy);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 0.5rem;
+}
+.back-inline:hover { text-decoration: underline; }
+
+/* Cart quantity + / − */
+.cart-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  list-style: none;
+  margin: 0.4rem 0;
+}
+#cart-lines { padding-left: 0; }
+.qty-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.qty-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--navy);
+  font-weight: 700;
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.qty-btn:hover { border-color: var(--blue); }
+.qty-num { min-width: 1.25rem; text-align: center; font-weight: 700; }
