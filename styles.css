@@ -44,3 +44,11 @@ button.ghost { background: #fff; color: var(--green-dark); border: 2px solid var
 #qr { padding: .5rem; background: #fff; }
 .panel { background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 1rem; margin-bottom: 1rem; display: grid; gap: .6rem; }
 .result { border-color: var(--green); background: #f3fbf6; }
+
+.status { display: grid; justify-items: center; gap: 1rem; padding: 3rem 0; text-align: center; }
+.spinner { width: 56px; height: 56px; border: 6px solid var(--green-light); border-top-color: var(--green);
+           border-radius: 50%; animation: spin .9s linear infinite; }
+.tick { width: 72px; height: 72px; display: grid; place-items: center; border-radius: 50%;
+        background: var(--green); color: #fff; font-size: 2.5rem; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .spinner { animation-duration: 3s; } }
