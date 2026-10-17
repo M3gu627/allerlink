@@ -158,16 +158,33 @@ editForm.birthday.addEventListener("change", () => (editForm.age.value = ageFrom
 
 function fillEditForm() {
   const profile = state.customer;
+  // Membership number derived from qr_token (matches the style shown on the card)
+  const token = profile.qr_token || profile.id || "";
+  const short = token.replace(/-/g, "").slice(0, 8).toUpperCase();
+  editForm.membership_no.value = short ? `AP-2026-${short.slice(0, 4)}` : "";
+
   editForm.display_name.value = profile.display_name;
   editForm.birthday.value = profile.birthday;
   editForm.age.value = ageFrom(profile.birthday);
+
+  // Locked dates – shown for reference (actual printed dates come from the card renderer)
+  const today = new Date();
+  const issue = profile.created_at ? new Date(profile.created_at) : today;
+  const valid = new Date(issue);
+  valid.setMonth(valid.getMonth() + 3); // 3-month AllerPass package
+  const fmt = (d) => d.toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "2-digit" });
+  editForm.issue_date.value = fmt(issue);
+  editForm.valid_until.value = fmt(valid);
+
   editForm.allergies.value = profile.allergies.join(", ");
   editForm.emergency_notes.value = profile.emergency_notes ?? "";
 }
 
 editForm.addEventListener("submit", async (e) => {
   e.preventDefault();
-  const { age, allergies, ...rest } = formData(editForm);
+  const data = formData(editForm);
+  // Ignore locked / display-only fields
+  const { age, membership_no, issue_date, valid_until, allergies, ...rest } = data;
   const changes = { ...rest, allergies: parseAllergies(allergies) };
   const { error } = await db.from("profiles").update(changes).eq("id", state.customer.id);
   if (error) return alert(error.message);
@@ -209,6 +226,34 @@ const setSignedIn = (signedIn) => {
   // Signed-in users only see Sign out up here; everything else is in the side menu.
   document.querySelectorAll("header nav [data-go]").forEach((button) => (button.hidden = signedIn));
 };
+
+// Restore session on page load so the user stays signed in until they sign out.
+async function restoreSession() {
+  if (!db) return;
+  const { data: { session } } = await db.auth.getSession();
+  if (!session) return;
+
+  setSignedIn(true);
+  const userId = session.user.id;
+
+  // Establishment account
+  const { data: establishment } = await db.from("establishments").select("active").eq("id", userId).maybeSingle();
+  if (establishment) {
+    if (!establishment.active) return; // not approved yet
+    state.role = "establishment";
+    show("dashboard", { reset: true });
+    return;
+  }
+
+  // Customer account
+  const { data: profile } = await db.from("profiles").select("*").eq("id", userId).maybeSingle();
+  if (profile) {
+    state.customer = profile;
+    state.role = "customer";
+    renderCard(profile);
+    show("card", { reset: true });
+  }
+}
 
 document.getElementById("form-login").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -301,3 +346,5 @@ async function updateStats() {
 }
 
 updateStats();
+
+restoreSession();

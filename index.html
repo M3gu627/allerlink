@@ -87,9 +87,12 @@
         <div class="card-info">
           <h3>My information</h3>
           <form class="panel" id="form-edit">
+            <label>Membership No. <input name="membership_no" readonly class="locked"></label>
             <label>Name or display name <input name="display_name" required></label>
             <label>Birthday <input name="birthday" type="date" required></label>
-            <label>Age <input name="age" readonly></label>
+            <label>Age <input name="age" readonly class="locked"></label>
+            <label>Issue date <input name="issue_date" readonly class="locked"></label>
+            <label>Valid until <input name="valid_until" readonly class="locked"></label>
             <label>Food allergies (separate with commas) <input name="allergies" required></label>
             <label>Emergency notes (optional) <textarea name="emergency_notes" rows="2"></textarea></label>
             <button class="primary">Save changes</button>
