@@ -121,7 +121,11 @@
         <!-- Right: Membership card -->
         <div class="card-visual">
           <div id="card3d" aria-label="3D AllerCard. Drag to rotate."></div>
-          <p class="note">Drag to rotate. Click the card to fill the screen.</p>
+          <p class="note">Drag to rotate. Use Enlarge to view full screen.</p>
+          <div class="actions card-zoom-actions">
+            <button type="button" class="ghost" id="btn-enlarge-3d">Enlarge 3D card</button>
+            <button type="button" class="ghost" id="btn-enlarge-2d">Enlarge flat cards</button>
+          </div>
           <div id="card2d"></div>
           <div class="actions">
             <button class="ghost" id="btn-download">Download card</button>
@@ -341,6 +345,17 @@
       </div>
     </section>
   </main>
+  </div>
+
+  <div id="zoom-layer" hidden>
+    <div id="zoom-bar">
+      <button type="button" id="zoom-out" aria-label="Zoom out">−</button>
+      <button type="button" id="zoom-in" aria-label="Zoom in">+</button>
+      <button type="button" id="zoom-close">Close</button>
+    </div>
+    <div id="zoom-stage">
+      <img id="zoom-img" alt="AllerCard enlarged">
+    </div>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>

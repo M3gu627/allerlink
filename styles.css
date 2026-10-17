@@ -167,3 +167,6 @@ button.ghost { background: #fff; color: var(--navy); border: 2px solid var(--nav
 .table-wrap table { width: 100%; border-collapse: collapse; font-size: .92rem; }
 .table-wrap th, .table-wrap td { text-align: left; padding: .65rem .5rem; border-top: 1px solid var(--line); }
 .table-wrap th { color: #5a6b7a; font-size: .75rem; text-transform: uppercase; }
+
+.card-zoom-actions { justify-content: center; margin: 0.5rem 0 0.75rem; }
+#zoom-layer[hidden] { display: none !important; }
