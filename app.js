@@ -21,13 +21,24 @@ const backButton = document.getElementById("btn-back");
 const layout = document.getElementById("layout");
 const sideNav = document.getElementById("sidenav");
 // Pages that show the dashboard side menu, per account type.
-const sideNavViews = { customer: ["card", "delivery", "done", "edit"], establishment: ["dashboard"] };
+const sideNavViews = {
+  customer: ["overview", "card", "foods", "wallet", "delivery", "done", "edit"],
+  establishment: ["dashboard"],
+};
+const customerViews = ["overview", "foods", "wallet"]; // need a signed-in customer
 
 function show(view, { isBack = false, reset = false } = {}) {
+  if (customerViews.includes(view) && !state.customer) {
+    setLoginKind("customer"); // signed-out visitors are sent to log in first
+    view = "login";
+  }
   if (!isBack && view !== currentView) viewHistory.push(currentView);
   if (view === "home" || reset) viewHistory.length = 0; // Home, sign out, and landing pages start a fresh trail
   currentView = view;
   if (view === "edit") fillEditForm();
+  if (view === "overview") loadOverview();
+  if (view === "foods") loadFoods();
+  if (view === "wallet") loadWallet();
   document.querySelectorAll("[data-view]").forEach((s) => (s.hidden = s.dataset.view !== view));
 
   const showSide = Boolean(sideNavViews[state.role]?.includes(view));
@@ -124,42 +135,11 @@ function renderCard(profile) {
   card3d.setProfile(profile);
 }
 
-// Draws the card artwork at CR80 size (300 dpi). Used for the download; reusable as a 3D texture later.
-function drawCardFace(profile) {
-  const canvas = document.createElement("canvas");
-  canvas.width = 1012;
-  canvas.height = 638;
-  const ctx = canvas.getContext("2d");
-
-  ctx.fillStyle = "#ffffff";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = "#1b5e3a";
-  ctx.fillRect(0, 0, canvas.width, 110); // brand bar
-
-  ctx.fillStyle = "#ffffff";
-  ctx.font = "bold 52px 'Segoe UI', sans-serif";
-  ctx.fillText("AllerLink", 40, 74);
-
-  ctx.fillStyle = "#17222f";
-  ctx.font = "26px 'Segoe UI', sans-serif";
-  ctx.fillText("MEMBERSHIP CARD", 40, 180);
-  ctx.font = "bold 46px 'Segoe UI', sans-serif";
-  ctx.fillText(profile.display_name, 40, 270, 580); // 580 keeps long names clear of the QR
-  ctx.font = "22px 'Segoe UI', sans-serif";
-  ctx.fillText("ID: " + profile.qr_token, 40, 560);
-  ctx.font = "18px 'Segoe UI', sans-serif";
-  ctx.fillText("Information tool only. Not a diagnosis or a guarantee of an allergen-free meal.", 40, 610);
-
-  const holder = document.createElement("div"); // render a sharp QR just for the artwork
-  new QRCode(holder, { text: profile.qr_token, width: 300, height: 300 });
-  ctx.drawImage(holder.querySelector("canvas"), 650, 170, 300, 300);
-  return canvas;
-}
-
-document.getElementById("btn-download").addEventListener("click", () => {
+document.getElementById("btn-download").addEventListener("click", async () => {
+  const canvas = await drawCardFace(state.customer);
   const link = document.createElement("a");
   link.download = "AllerCard.png";
-  link.href = drawCardFace(state.customer).toDataURL("image/png");
+  link.href = canvas.toDataURL("image/png");
   link.click();
 });
 
@@ -239,7 +219,7 @@ document.getElementById("form-login").addEventListener("submit", async (e) => {
     state.customer = profile;
     state.role = "customer";
     renderCard(profile);
-    return show("card", { reset: true });
+    return show("overview", { reset: true });
   }
   alert("This account has no dashboard yet.");
 });
@@ -249,6 +229,7 @@ signOutButton.addEventListener("click", async () => {
   document.getElementById("result").hidden = true;
   state.role = null;
   state.customer = null;
+  resetCart();
   setSignedIn(false);
   show("home");
 });
