@@ -7,7 +7,7 @@ const loadImage = (src) =>
     img.src = src;
   });
 
-const cardImages = Promise.all([loadImage("assets/card-front.jpg"), loadImage("assets/card-back.jpg")]);
+const cardImages = Promise.all([loadImage("card-front.jpg"), loadImage("card-back.jpg")]);
 
 const cardDate = (date) => date.toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "2-digit" });
 
