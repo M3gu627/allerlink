@@ -96,3 +96,39 @@ button.ghost { background: #fff; color: var(--navy); border: 2px solid var(--nav
 #card2d { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem; margin: 1rem 0; }
 #card2d canvas { width: 100%; height: auto; border-radius: 10px; box-shadow: 0 2px 8px rgba(13, 42, 92, .15); }
 #history { margin: 0; padding-left: 1.2rem; }
+
+/* Side-by-side: info left, card right */
+.card-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  align-items: start;
+  margin: 1.5rem 0 2rem;
+}
+.card-info h3 {
+  margin-top: 0;
+}
+.card-visual {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.card-visual #card3d {
+  width: 100%;
+  max-width: 420px;
+}
+.card-visual .actions {
+  justify-content: center;
+}
+.card-visual .note {
+  text-align: center;
+}
+
+@media (max-width: 800px) {
+  .card-layout {
+    grid-template-columns: 1fr;
+  }
+  .card-visual {
+    order: -1; /* card appears above info on mobile */
+  }
+}
