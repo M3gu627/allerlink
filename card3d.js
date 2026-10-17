@@ -1,7 +1,7 @@
 // 3D AllerCard viewer built with Three.js (loaded from a CDN in index.html).
 // The front artwork comes from drawCardFace() in app.js. Drag the card to rotate it.
 const card3d = (() => {
-  const CARD = { w: 8.56, h: 5.398, depth: 0.08, radius: 0.35 }; // CR80 card size in cm
+  const CARD = { w: 8.56, h: (8.56 * 1240) / 1748, depth: 0.08, radius: 0.35 }; // cm, same ratio as the card artwork
   let profile = null;
   let renderer, scene, camera, controls, front, frameId;
 
@@ -23,32 +23,6 @@ const card3d = (() => {
     return shape;
   }
 
-  // Back of the card: brand color plus the safety disclaimer from the thesis.
-  function drawCardBack() {
-    const canvas = document.createElement("canvas");
-    canvas.width = 1012;
-    canvas.height = 638;
-    const ctx = canvas.getContext("2d");
-    ctx.fillStyle = "#1b5e3a";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 64px 'Segoe UI', sans-serif";
-    ctx.fillText("AllerLink", 60, 130);
-    ctx.font = "28px 'Segoe UI', sans-serif";
-    ctx.fillText("Connecting Guests to Safer Choices.", 60, 185);
-
-    ctx.font = "26px 'Segoe UI', sans-serif";
-    [
-      "AllerCard is an information and communication tool.",
-      "It does not diagnose allergies or guarantee an",
-      "allergen-free meal. Please verify ingredients,",
-      "preparation procedures, and possible cross-contact",
-      "before serving.",
-    ].forEach((line, i) => ctx.fillText(line, 60, 370 + i * 40));
-    return canvas;
-  }
-
   function makeMap(canvas) {
     const map = new THREE.CanvasTexture(canvas);
     map.encoding = THREE.sRGBEncoding;
@@ -60,13 +34,13 @@ const card3d = (() => {
 
   const glossy = (map) => new THREE.MeshPhysicalMaterial({ map, roughness: 0.4, clearcoat: 0.6 });
 
-  function updateFront() {
+  function updateFront(canvas) {
     front.material.map?.dispose();
-    front.material.map = makeMap(drawCardFace(profile));
+    front.material.map = makeMap(canvas);
     front.material.needsUpdate = true;
   }
 
-  function build() {
+  function build(frontCanvas, backCanvas) {
     try {
       renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
       renderer.outputEncoding = THREE.sRGBEncoding;
@@ -75,7 +49,7 @@ const card3d = (() => {
 
       scene = new THREE.Scene();
       camera = new THREE.PerspectiveCamera(35, 1.6, 0.1, 100);
-      camera.position.set(3, 2, 12.5); // slight tilt so it reads as 3D right away
+      camera.position.set(3, 2, 14); // slight tilt so it reads as 3D right away
 
       scene.add(new THREE.HemisphereLight(0xffffff, 0xbfd8c8, 0.6));
       const sun = new THREE.DirectionalLight(0xffffff, 0.45);
@@ -93,7 +67,7 @@ const card3d = (() => {
       const faceGeometry = new THREE.ShapeGeometry(shape);
       front = new THREE.Mesh(faceGeometry, glossy(null));
       front.position.z = CARD.depth / 2 + 0.001;
-      const back = new THREE.Mesh(faceGeometry, glossy(makeMap(drawCardBack())));
+      const back = new THREE.Mesh(faceGeometry, glossy(makeMap(backCanvas)));
       back.rotation.y = Math.PI;
       back.position.z = -CARD.depth / 2 - 0.001;
       scene.add(body, front, back);
@@ -108,7 +82,7 @@ const card3d = (() => {
       return true;
     } catch (error) {
       renderer = null; // no WebGL: fall back to the flat card image
-      container().replaceChildren(drawCardFace(profile));
+      container().replaceChildren(frontCanvas);
       return false;
     }
   }
@@ -132,12 +106,14 @@ const card3d = (() => {
   return {
     setProfile(newProfile) {
       profile = newProfile;
-      if (renderer && profile) updateFront();
+      if (renderer && profile) drawCardFace(profile).then(updateFront);
     },
-    open() { // call once the card page is visible, so the container has a size
+    async open() { // call once the card page is visible, so the container has a size
       if (!profile) return;
-      if (!renderer && !build()) return;
-      updateFront();
+      const [frontCanvas, backCanvas] = await Promise.all([drawCardFace(profile), drawCardBack()]);
+      if (!container().clientWidth) return; // the person already left this page
+      if (!renderer && !build(frontCanvas, backCanvas)) return;
+      updateFront(frontCanvas);
       resize();
       if (!frameId) loop();
     },
