@@ -3,17 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>AllerLink | Connecting Guests to Safer Choices</title>
+  <title>AllerLink Technologies | Connecting Guests to Safer Choices</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <header class="bar">
-    <a href="#" data-go="home" class="brand">AllerLink</a>
+    <a href="#" data-go="home" class="brand">AllerLink <small>Technologies</small></a>
     <nav>
       <button data-go="home">Home</button>
-      <button data-go="privacy">Customer</button>
-      <button data-go="partner">Partner With Us</button>
-      <button data-go="login">Admin</button>
+      <button data-go="login" data-kind="customer">Log in / Sign up</button>
+      <button data-go="login" data-kind="admin">Admin</button>
       <button id="btn-signout" hidden>Sign out</button>
     </nav>
   </header>
@@ -31,7 +30,7 @@
         <li><b>Show it</b> at a partner. Staff scan it and see only what they need, only for that visit.</li>
       </ol>
       <div class="actions">
-        <button class="primary" data-go="privacy">Customer</button>
+        <button class="primary" data-go="login" data-kind="customer">Customer</button>
         <button class="ghost" data-go="partner">Partner With Us</button>
       </div>
       <p class="note">AllerCard is an information and communication tool. It does not diagnose allergies or guarantee an allergen-free meal.</p>
@@ -50,6 +49,7 @@
       </ul>
       <label class="check"><input type="checkbox" id="consent-customer"> I have read this notice and consent to the processing of my allergy information.</label>
       <div class="actions"><button class="primary" id="btn-consent">Continue</button></div>
+      <p>Already have an account? <a href="#" data-go="login" data-kind="customer">Log in</a></p>
     </section>
 
     <section data-view="profile" hidden>
@@ -115,6 +115,7 @@
         <label class="check"><input type="checkbox" name="consent" required> I acknowledge the privacy notice and agree to handle customer allergy information only for food-safety communication.</label>
         <button class="primary">Submit application</button>
       </form>
+      <p>Already a partner? <a href="#" data-go="login" data-kind="admin">Log in</a></p>
     </section>
 
     <section data-view="partner-done" hidden>
@@ -123,12 +124,13 @@
     </section>
 
     <section data-view="login" hidden>
-      <h2>Sign in</h2>
+      <h2 id="login-title">Customer log in</h2>
       <form id="form-login">
         <label>Email <input name="email" type="email" required></label>
         <label>Password <input name="password" type="password" required></label>
-        <button class="primary">Sign in</button>
+        <button class="primary">Log in</button>
       </form>
+      <p>No account yet? <a href="#" id="signup-link" data-go="privacy">Sign up</a></p>
     </section>
 
     <section data-view="dashboard" hidden>
