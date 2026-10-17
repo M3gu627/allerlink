@@ -62,21 +62,46 @@
         <label>Age <input name="age" readonly></label>
         <label>Food allergies (separate with commas) <input name="allergies" placeholder="peanuts, shrimp, milk" required></label>
         <label>Emergency notes (optional) <textarea name="emergency_notes" rows="2"></textarea></label>
-        <button class="primary">Create my AllerCard</button>
+        <button class="primary">Sign up</button>
       </form>
     </section>
 
     <section data-view="card" hidden>
-      <h2>Your AllerCard preview</h2>
+      <h2>My AllerCard</h2>
       <div class="card">
         <div><b>AllerLink</b><br><small>MEMBERSHIP CARD</small><p id="card-name"></p><small id="card-id"></small></div>
         <div id="qr"></div>
       </div>
-      <div id="order-box">
-        <h3>AllerPass package: ₱199 per 3 months</h3>
-        <p>Includes your AllerCard, profile updates anytime, and access at every participating establishment.</p>
-        <div class="actions"><button class="primary" data-go="delivery">Order my AllerCard</button></div>
+      <h3>AllerPass package: ₱199 per 3 months</h3>
+      <p>Includes your AllerCard, profile updates anytime, and access at every participating establishment.</p>
+      <div class="actions">
+        <button class="primary" data-go="delivery">Order physical AllerCard</button>
+        <button class="ghost" id="btn-edit">Edit Information</button>
       </div>
+    </section>
+
+    <section data-view="signup-done" hidden>
+      <div class="status" id="signup-loading">
+        <div class="spinner" aria-hidden="true"></div>
+        <p>Creating your account…</p>
+      </div>
+      <div class="status" id="signup-success" hidden>
+        <div class="tick" aria-hidden="true">✓</div>
+        <h2>Successfully signed up</h2>
+        <button class="primary" data-go="login" data-kind="customer">Sign-In</button>
+      </div>
+    </section>
+
+    <section data-view="edit" hidden>
+      <h2>Edit information</h2>
+      <form id="form-edit">
+        <label>Name or display name <input name="display_name" required></label>
+        <label>Birthday <input name="birthday" type="date" required></label>
+        <label>Age <input name="age" readonly></label>
+        <label>Food allergies (separate with commas) <input name="allergies" required></label>
+        <label>Emergency notes (optional) <textarea name="emergency_notes" rows="2"></textarea></label>
+        <button class="primary">Save changes</button>
+      </form>
     </section>
 
     <section data-view="delivery" hidden>
@@ -96,7 +121,7 @@
     <section data-view="done" hidden>
       <h2>Order received</h2>
       <p>We sent a confirmation to your email. We will confirm your delivery date once your card is ready.</p>
-      <p class="note">Your dashboard (profile, subscription, delivery status) is the next screen to build. See the README notes.</p>
+      <div class="actions"><button class="primary" data-go="card">Back to dashboard</button></div>
     </section>
 
     <!-- 2. FOOD ESTABLISHMENT FLOW -->
