@@ -25,7 +25,7 @@ const sideNav = document.getElementById("sidenav");
 const sideNavViews = {
   customer: ["card", "foods", "wallet", "delivery", "done"],
   establishment: ["partner-home", "partner-products", "partner-sales", "dashboard"],
-  employee: ["employee-home"],
+  employee: ["employee-home", "employee-users", "employee-businesses", "employee-confirmations"],
 };
 const roleHome = { customer: "card", establishment: "dashboard", employee: "employee-home" };
 const customerViews = ["card", "foods", "wallet"]; // need a signed-in customer
@@ -50,6 +50,10 @@ function show(view, { isBack = false, reset = false } = {}) {
   if (view === "partner-home") fillPartnerProfile();
   if (view === "partner-products") renderProducts();
   if (view === "partner-sales") renderPartnerSales();
+  if (view === "employee-home") fillEmployeeProfile();
+  if (view === "employee-users") loadEmployeeUsers();
+  if (view === "employee-businesses") loadEmployeeBusinesses();
+  if (view === "employee-confirmations") loadEmployeeConfirmations();
 
   const showSide = Boolean(sideNavViews[state.role]?.includes(view));
   layout.classList.toggle("with-side", showSide);
@@ -275,10 +279,17 @@ document.getElementById("form-delivery").addEventListener("submit", async (e) =>
 // ---------- Establishment application ----------
 document.getElementById("form-partner").addEventListener("submit", async (e) => {
   e.preventDefault();
-  const { consent, ...application } = formData(e.target);
+  const { consent, password, ...application } = formData(e.target);
   if (db) {
-    const { error } = await db.from("applications").insert(application);
+    // The business registers its login now; an employee activates it by approving the application.
+    let { data, error } = await db.auth.signUp({ email: application.email, password });
+    if (error && /registered|exists/i.test(error.message)) {
+      ({ data, error } = await db.auth.signInWithPassword({ email: application.email, password })); // retry after an earlier failed attempt
+    }
     if (error) return alert(error.message);
+    const { error: insertError } = await db.from("applications").insert({ ...application, user_id: data.user.id });
+    await db.auth.signOut(); // they log in after approval
+    if (insertError) return alert(insertError.message);
   } else {
     demo.push("applications", application);
   }
@@ -324,6 +335,12 @@ async function enterEstablishment(userId, { quiet = false } = {}) {
 async function enterCustomer(userId) {
   const { data: profile } = await db.from("profiles").select("*").eq("id", userId).maybeSingle();
   if (!profile) return { ok: false, reason: "none" };
+  if (profile.status === "suspended") {
+    await db.auth.signOut();
+    setSignedIn(false);
+    alert("Your account has been suspended. Please contact AllerLink.");
+    return { ok: false, reason: "suspended" };
+  }
   state.customer = profile;
   state.role = "customer";
   state.establishment = null;
@@ -443,11 +460,15 @@ document.getElementById("form-login").addEventListener("submit", async (e) => {
       if (kinds.partnerPending) {
         await db.auth.signOut();
         setSignedIn(false);
-        return alert("Your business account is not approved yet.");
+        return alert("Your business account is not active. It is either pending approval or suspended. Please contact AllerLink.");
       }
       if (!kinds.partner) {
+        const { data: application } = await db.from("applications").select("status").eq("user_id", userId)
+          .order("created_at", { ascending: false }).limit(1).maybeSingle();
         await db.auth.signOut();
         setSignedIn(false);
+        if (application?.status === "pending") return alert("Your application is still being reviewed. We will email you once it is approved.");
+        if (application?.status === "rejected") return alert("Your application was not approved.");
         return alert(kinds.customer
           ? "This is a customer account. Use “Log in / Sign up” → User (Customer)."
           : "No approved business account for this login.");

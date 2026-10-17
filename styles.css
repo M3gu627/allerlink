@@ -279,3 +279,17 @@ button.ghost { background: #fff; color: var(--navy); border: 2px solid var(--nav
              background: #e8f0fe; color: var(--navy); }
 .step-icon svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2;
                  stroke-linecap: round; stroke-linejoin: round; }
+
+/* Employee dashboard */
+#form-employee { max-width: 480px; }
+#form-employee input[readonly] { background: #f0f4f9; color: #3a4a5a; cursor: default; border-color: #c8d4e4; }
+#eu-search, #eb-search { width: 100%; max-width: 380px; margin-bottom: 1rem; }
+.row-actions { white-space: nowrap; }
+.row-actions .link { margin-right: .75rem; }
+.link.danger { color: #a12626; }
+.badge { padding: .2rem .6rem; border-radius: 999px; font-size: .85rem; font-weight: 600; white-space: nowrap; }
+.badge.ok { background: #e8f0fe; color: var(--navy); }
+.badge.off { background: #fde8e8; color: #a12626; }
+.detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: .75rem 1.5rem; }
+.detail-grid div { display: grid; }
+.detail-grid small { color: #5a6b7a; }
