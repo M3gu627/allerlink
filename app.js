@@ -1,7 +1,7 @@
 // ---------- Config ----------
 // Leave empty to run in demo mode (data stays in this browser's localStorage).
-const SUPABASE_URL = "";
-const SUPABASE_KEY = ""; // the public "anon" key, never the service key
+const SUPABASE_URL = "https://nrfcdviqtwqailhescmu.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5yZmNkdmlxdHdxYWlsaGVzY211Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIxNDA5OTYsImV4cCI6MjEwNzcxNjk5Nn0.wj0Sy4Bf1svrIT153YmJit2kAlhpy_ewDd1OtioHIiU"; // the public "anon" key, never the service key
 
 const db = SUPABASE_URL ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
