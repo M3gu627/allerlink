@@ -8,7 +8,7 @@
 </head>
 <body>
   <header class="bar">
-    <a href="#" data-go="home" class="brand">AllerLink <small>Technologies</small></a>
+    <a href="#" data-go="home" class="brand"><img src="logo.png" alt="AllerLink Technologies"></a>
     <nav>
       <button data-go="home">Home</button>
       <button data-go="login" data-kind="customer">Log in / Sign up</button>
@@ -19,18 +19,15 @@
 
   <div class="layout" id="layout">
     <aside id="sidenav" aria-label="Dashboard menu" hidden>
-      <img class="side-logo" src="assets/logo.png" alt="AllerLink Technologies">
+      <img class="side-logo" src="logo.png" alt="AllerLink Technologies">
       <div data-role="customer">
-        <button data-go="overview"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/></svg> Home</button>
         <button data-go="card"><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="20" height="14" x="2" y="5" rx="2"/><path d="M2 10h20"/></svg> My AllerCard</button>
         <button data-go="foods"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg> AllerFoods</button>
         <button data-go="wallet"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg> Wallet</button>
-        <button data-go="edit"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></svg> Edit Information</button>
       </div>
       <div data-role="establishment">
         <button data-go="dashboard"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 12h10"/></svg> Scan AllerCard</button>
       </div>
-      <button id="btn-side-signout"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg> Sign out</button>
     </aside>
 
   <main>
@@ -86,32 +83,27 @@
       <h2>My AllerCard</h2>
       <div id="card3d" aria-label="3D AllerCard. Drag to rotate."></div>
       <p class="note">Drag the card to rotate it.</p>
-      <div class="actions"><button class="ghost" id="btn-download">Download card</button></div>
-      <h3>AllerPass package: ₱199 per 3 months</h3>
-      <p>Includes your AllerCard, profile updates anytime, and access at every participating establishment.</p>
-      <div class="actions"><button class="primary" data-go="delivery">Order physical AllerCard</button></div>
+      <div id="card2d"></div>
+      <div class="actions">
+        <button class="ghost" id="btn-download">Download card</button>
+        <button class="primary" data-go="delivery">Order physical AllerCard</button>
+      </div>
+      <p class="note">AllerPass package: ₱199 per 3 months. Includes your AllerCard, profile updates anytime, and access at every participating establishment.</p>
+
+      <h3>My information</h3>
+      <form class="panel" id="form-edit">
+        <label>Name or display name <input name="display_name" required></label>
+        <label>Birthday <input name="birthday" type="date" required></label>
+        <label>Age <input name="age" readonly></label>
+        <label>Food allergies (separate with commas) <input name="allergies" required></label>
+        <label>Emergency notes (optional) <textarea name="emergency_notes" rows="2"></textarea></label>
+        <button class="primary">Save changes</button>
+      </form>
+
+      <h3>Order history</h3>
+      <div class="panel"><ul id="history"></ul></div>
     </section>
 
-    <section data-view="overview" hidden>
-      <h2 id="greeting">Good day!</h2>
-      <p class="note">Here is your food safety at a glance.</p>
-      <div class="stats">
-        <div class="stat"><small>Wallet cash</small><b id="ov-cash">₱0.00</b></div>
-        <div class="stat"><small>Points</small><b id="ov-points">0</b></div>
-      </div>
-      <div class="panel">
-        <h3>My allergy profile</h3>
-        <div class="chips" id="ov-allergies"></div>
-      </div>
-      <div class="panel">
-        <h3>Quick actions</h3>
-        <div class="actions">
-          <button class="primary" data-go="foods">Order food</button>
-          <button class="ghost" data-go="card">View my AllerCard</button>
-          <button class="ghost" data-go="wallet">Open wallet</button>
-        </div>
-      </div>
-    </section>
 
     <section data-view="foods" hidden>
       <h2>AllerFoods</h2>
@@ -154,7 +146,6 @@
         <button class="primary">Add cash</button>
         <small>Demo: payments are simulated. Real money needs a payment gateway such as PayMongo.</small>
       </form>
-      <div class="panel"><h3>Recent orders</h3><ul id="w-orders"></ul></div>
     </section>
 
     <section data-view="signup-done" hidden>
@@ -169,17 +160,6 @@
       </div>
     </section>
 
-    <section data-view="edit" hidden>
-      <h2>Edit information</h2>
-      <form id="form-edit">
-        <label>Name or display name <input name="display_name" required></label>
-        <label>Birthday <input name="birthday" type="date" required></label>
-        <label>Age <input name="age" readonly></label>
-        <label>Food allergies (separate with commas) <input name="allergies" required></label>
-        <label>Emergency notes (optional) <textarea name="emergency_notes" rows="2"></textarea></label>
-        <button class="primary">Save changes</button>
-      </form>
-    </section>
 
     <section data-view="delivery" hidden>
       <h2>Delivery information</h2>
