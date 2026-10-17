@@ -1,7 +1,7 @@
 // ---------- Config ----------
 // Leave empty to run in demo mode (data stays in this browser's localStorage).
-const SUPABASE_URL = "https://nrfcdviqtwqailhescmu.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5yZmNkdmlxdHdxYWlsaGVzY211Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTIxNDA5OTYsImV4cCI6MjEwNzcxNjk5Nn0.wj0Sy4Bf1svrIT153YmJit2kAlhpy_ewDd1OtioHIiU"; // the public "anon" key, never the service key
+const SUPABASE_URL = "";
+const SUPABASE_KEY = ""; // the public "anon" key, never the service key
 
 const db = SUPABASE_URL ? supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
 
@@ -12,18 +12,36 @@ const demo = {
 };
 
 // ---------- Navigation ----------
-const state = { customer: null, scanner: null };
+const state = { customer: null, scanner: null, role: null }; // role: "customer" or "establishment"
 
 const viewHistory = []; // pages visited before the current one, for the Back button
 let currentView = "home";
 const backButton = document.getElementById("btn-back");
 
+const layout = document.getElementById("layout");
+const sideNav = document.getElementById("sidenav");
+// Pages that show the dashboard side menu, per account type.
+const sideNavViews = { customer: ["card", "delivery", "done", "edit"], establishment: ["dashboard"] };
+
 function show(view, { isBack = false, reset = false } = {}) {
   if (!isBack && view !== currentView) viewHistory.push(currentView);
   if (view === "home" || reset) viewHistory.length = 0; // Home, sign out, and landing pages start a fresh trail
   currentView = view;
+  if (view === "edit") fillEditForm();
   document.querySelectorAll("[data-view]").forEach((s) => (s.hidden = s.dataset.view !== view));
-  backButton.hidden = viewHistory.length === 0;
+
+  const showSide = Boolean(sideNavViews[state.role]?.includes(view));
+  layout.classList.toggle("with-side", showSide);
+  sideNav.hidden = !showSide;
+  sideNav.querySelectorAll("[data-role]").forEach((group) => (group.hidden = group.dataset.role !== state.role));
+  sideNav.querySelectorAll("[data-go]").forEach((item) => {
+    if (item.dataset.go === view) item.setAttribute("aria-current", "page");
+    else item.removeAttribute("aria-current");
+  });
+
+  backButton.hidden = viewHistory.length === 0 || showSide; // the side menu replaces Back
+  if (view === "card") card3d.open(); // after the layout is set, so the viewer has a size
+  else card3d.close();
   window.scrollTo(0, 0);
 }
 
@@ -103,25 +121,59 @@ profileForm.addEventListener("submit", async (e) => {
 });
 
 function renderCard(profile) {
-  document.getElementById("card-name").textContent = profile.display_name;
-  document.getElementById("card-id").textContent = "ID: " + profile.qr_token;
-  const qr = document.getElementById("qr");
-  qr.innerHTML = "";
-  new QRCode(qr, { text: profile.qr_token, width: 120, height: 120 });
+  card3d.setProfile(profile);
 }
+
+// Draws the card artwork at CR80 size (300 dpi). Used for the download; reusable as a 3D texture later.
+function drawCardFace(profile) {
+  const canvas = document.createElement("canvas");
+  canvas.width = 1012;
+  canvas.height = 638;
+  const ctx = canvas.getContext("2d");
+
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "#1b5e3a";
+  ctx.fillRect(0, 0, canvas.width, 110); // brand bar
+
+  ctx.fillStyle = "#ffffff";
+  ctx.font = "bold 52px 'Segoe UI', sans-serif";
+  ctx.fillText("AllerLink", 40, 74);
+
+  ctx.fillStyle = "#17222f";
+  ctx.font = "26px 'Segoe UI', sans-serif";
+  ctx.fillText("MEMBERSHIP CARD", 40, 180);
+  ctx.font = "bold 46px 'Segoe UI', sans-serif";
+  ctx.fillText(profile.display_name, 40, 270, 580); // 580 keeps long names clear of the QR
+  ctx.font = "22px 'Segoe UI', sans-serif";
+  ctx.fillText("ID: " + profile.qr_token, 40, 560);
+  ctx.font = "18px 'Segoe UI', sans-serif";
+  ctx.fillText("Information tool only. Not a diagnosis or a guarantee of an allergen-free meal.", 40, 610);
+
+  const holder = document.createElement("div"); // render a sharp QR just for the artwork
+  new QRCode(holder, { text: profile.qr_token, width: 300, height: 300 });
+  ctx.drawImage(holder.querySelector("canvas"), 650, 170, 300, 300);
+  return canvas;
+}
+
+document.getElementById("btn-download").addEventListener("click", () => {
+  const link = document.createElement("a");
+  link.download = "AllerCard.png";
+  link.href = drawCardFace(state.customer).toDataURL("image/png");
+  link.click();
+});
 
 const editForm = document.getElementById("form-edit");
 editForm.birthday.addEventListener("change", () => (editForm.age.value = ageFrom(editForm.birthday.value)));
 
-document.getElementById("btn-edit").addEventListener("click", () => {
+function fillEditForm() {
   const profile = state.customer;
   editForm.display_name.value = profile.display_name;
   editForm.birthday.value = profile.birthday;
   editForm.age.value = ageFrom(profile.birthday);
   editForm.allergies.value = profile.allergies.join(", ");
   editForm.emergency_notes.value = profile.emergency_notes ?? "";
-  show("edit");
-});
+}
 
 editForm.addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -132,8 +184,7 @@ editForm.addEventListener("submit", async (e) => {
   state.customer = { ...state.customer, ...changes };
   renderCard(state.customer);
   alert("Your information was updated.");
-  viewHistory.pop(); // drop the dashboard entry so Back does not loop
-  show("card", { isBack: true });
+  show("card", { reset: true });
 });
 
 document.getElementById("form-delivery").addEventListener("submit", async (e) => {
@@ -178,6 +229,7 @@ document.getElementById("form-login").addEventListener("submit", async (e) => {
   const { data: establishment } = await db.from("establishments").select("active").eq("id", userId).maybeSingle();
   if (establishment) {
     if (!establishment.active) return alert("Your establishment account has not been approved yet.");
+    state.role = "establishment";
     return show("dashboard", { reset: true });
   }
 
@@ -185,6 +237,7 @@ document.getElementById("form-login").addEventListener("submit", async (e) => {
   const { data: profile } = await db.from("profiles").select("*").eq("id", userId).maybeSingle();
   if (profile) {
     state.customer = profile;
+    state.role = "customer";
     renderCard(profile);
     return show("card", { reset: true });
   }
@@ -194,9 +247,13 @@ document.getElementById("form-login").addEventListener("submit", async (e) => {
 signOutButton.addEventListener("click", async () => {
   await db?.auth.signOut();
   document.getElementById("result").hidden = true;
+  state.role = null;
+  state.customer = null;
   setSignedIn(false);
   show("home");
 });
+
+document.getElementById("btn-side-signout").addEventListener("click", () => signOutButton.click());
 
 // ---------- Scanner (inside the establishment dashboard) ----------
 async function lookup(token) {
