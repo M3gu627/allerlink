@@ -543,19 +543,48 @@ document.getElementById("biz-avatar-input")?.addEventListener("change", () => {
 
 document.getElementById("form-partner-profile")?.addEventListener("submit", async (e) => {
   e.preventDefault();
-  const payload = formData(e.target);
-  if (state.establishment?.logo_url) payload.logo_url = state.establishment.logo_url;
   const msg = document.getElementById("partner-profile-msg");
-  state.establishment = { ...(state.establishment || {}), ...payload };
+  msg.textContent = "Saving…";
+  const raw = formData(e.target);
+  // Only send real profile fields (avoid surprising columns / empty overwrites of id)
+  const payload = {
+    business_name: raw.business_name,
+    business_type: raw.business_type,
+    address: raw.address,
+    contact_person: raw.contact_person,
+    email: raw.email,
+    phone: raw.phone,
+    notes: raw.notes,
+  };
+  if (state.establishment?.logo_url) payload.logo_url = state.establishment.logo_url;
+
+  state.establishment = { ...(state.establishment || {}), ...payload, active: state.establishment?.active ?? true };
+
   if (!db || state.establishment.id === "demo") {
     writePartnerList("profile", [state.establishment]);
     msg.textContent = "Profile saved on this device.";
     return;
   }
-  const { error } = await db.from("establishments").update(payload).eq("id", state.establishment.id);
-  msg.textContent = error
-    ? (error.message + " — run the SQL below to add logo_url if needed")
-    : "Profile saved.";
+
+  const id = state.establishment.id;
+  const { data, error } = await db
+    .from("establishments")
+    .update(payload)
+    .eq("id", id)
+    .select("*")
+    .maybeSingle();
+
+  if (error) {
+    msg.textContent = error.message + " — run partner-profile-fix.sql in Supabase.";
+    return;
+  }
+  if (!data) {
+    msg.textContent = "Save blocked by database permissions. Run partner-profile-fix.sql so owners can update their row.";
+    return;
+  }
+  state.establishment = { ...state.establishment, ...data };
+  setBizAvatar(state.establishment.logo_url, state.establishment.business_name);
+  msg.textContent = "Profile saved.";
 });
 
 async function loadProducts() {
