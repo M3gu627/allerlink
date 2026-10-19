@@ -120,6 +120,7 @@ document.getElementById("btn-consent").addEventListener("click", () => {
 });
 
 const profileForm = document.getElementById("form-profile");
+createAllergyPicker(document.getElementById("signup-allergies"));
 
 const ageFrom = (date) => Math.floor((Date.now() - new Date(date)) / (365.25 * 24 * 3600 * 1000));
 
@@ -149,6 +150,7 @@ async function createAccount(profile, password) {
 profileForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   const { password, age, allergies, ...rest } = formData(profileForm);
+  if (!allergies) return alert("Please choose at least one allergy.");
   const profile = {
     ...rest,
     allergies: parseAllergies(allergies),
@@ -184,6 +186,7 @@ document.getElementById("btn-download").addEventListener("click", async () => {
 });
 
 const editForm = document.getElementById("form-edit");
+const editAllergies = createAllergyPicker(document.getElementById("edit-allergies"));
 editForm.birthday.addEventListener("change", () => (editForm.age.value = ageFrom(editForm.birthday.value)));
 
 // Profile picture picker
@@ -231,7 +234,7 @@ function fillEditForm() {
   editForm.issue_date.value = fmt(issue);
   editForm.valid_until.value = fmt(valid);
 
-  editForm.allergies.value = (profile.allergies || []).join(", ");
+  editAllergies.set(profile.allergies || []);
   editForm.emergency_notes.value = profile.emergency_notes ?? "";
 
   // Avatar
@@ -253,6 +256,7 @@ editForm.addEventListener("submit", async (e) => {
   const data = formData(editForm);
   // Ignore locked / display-only fields
   const { age, membership_no, issue_date, valid_until, allergies, ...rest } = data;
+  if (!allergies) return alert("Please choose at least one allergy.");
   const changes = { ...rest, allergies: parseAllergies(allergies) };
   // Keep any locally chosen avatar
   if (state.customer?.avatar_url) changes.avatar_url = state.customer.avatar_url;
@@ -744,6 +748,16 @@ function resizeImage(file, maxSize = 640) {
 
 let productImage = ""; // photo chosen in the Add product form
 const productPreview = document.getElementById("product-image-preview");
+const productPreviewWrap = document.getElementById("product-image-wrap");
+const productImageInput = document.getElementById("product-image-input");
+
+function clearProductImage() {
+  productImage = "";
+  productPreviewWrap.hidden = true;
+  productImageInput.value = ""; // so choosing the same file again still triggers a change
+}
+
+document.getElementById("product-image-remove")?.addEventListener("click", clearProductImage);
 
 document.getElementById("product-image-input")?.addEventListener("change", async (e) => {
   const file = e.target.files?.[0];
@@ -751,7 +765,7 @@ document.getElementById("product-image-input")?.addEventListener("change", async
   if (!file.type.startsWith("image/")) return alert("Please choose an image file.");
   productImage = await resizeImage(file);
   productPreview.src = productImage;
-  productPreview.hidden = false;
+  productPreviewWrap.hidden = false;
 });
 
 document.getElementById("form-product")?.addEventListener("submit", async (e) => {
@@ -784,8 +798,7 @@ document.getElementById("form-product")?.addEventListener("submit", async (e) =>
     writePartnerList("products", [row, ...readPartnerList("products")]);
   }
   e.target.reset();
-  productImage = "";
-  productPreview.hidden = true;
+  clearProductImage();
   renderProducts();
 });
 

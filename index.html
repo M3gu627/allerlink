@@ -104,7 +104,7 @@
         <label>Password <input name="password" type="password" minlength="8" required></label>
         <label>Birthday <input name="birthday" type="date" required></label>
         <label>Age <input name="age" readonly></label>
-        <label>Food allergies (separate with commas) <input name="allergies" placeholder="peanuts, shrimp, milk" required></label>
+        <fieldset class="allergy-field"><legend>Food allergies</legend><div id="signup-allergies"></div></fieldset>
         <label>Emergency notes (optional) <textarea name="emergency_notes" rows="2"></textarea></label>
         <button class="primary">Sign up</button>
       </form>
@@ -140,7 +140,7 @@
             <label>Age <input name="age" readonly class="locked"></label>
             <label>Issue date <input name="issue_date" readonly class="locked"></label>
             <label>Valid until <input name="valid_until" readonly class="locked"></label>
-            <label>Food allergies (separate with commas) <input name="allergies" required></label>
+            <fieldset class="allergy-field"><legend>Food allergies</legend><div id="edit-allergies"></div></fieldset>
             <label>Emergency notes (optional) <textarea name="emergency_notes" rows="2"></textarea></label>
             <button class="primary">Save changes</button>
           </form>
@@ -331,7 +331,10 @@
         <label>Ingredients <input name="ingredients" placeholder="chicken, rice, garlic, oil"></label>
         <label>Allergens (comma-separated) <input name="allergens" placeholder="gluten, dairy"></label>
         <label>Photo (optional) <input type="file" id="product-image-input" accept="image/*"></label>
-        <img id="product-image-preview" class="product-thumb" alt="Photo preview" hidden>
+        <div id="product-image-wrap" class="photo-preview" hidden>
+          <img id="product-image-preview" alt="Photo preview">
+          <button type="button" id="product-image-remove" aria-label="Remove photo">×</button>
+        </div>
         <button class="primary" type="submit">Add product</button>
       </form>
       <div id="product-list" class="list-stack"></div>
@@ -473,6 +476,7 @@
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
   <script src="cardart.js"></script>
   <script src="card3d.js"></script>
+  <script src="allergy-picker.js"></script>
   <script src="app.js"></script>
   <script src="foods.js"></script>
   <script src="employee.js"></script>
