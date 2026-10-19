@@ -264,13 +264,19 @@
       <form id="form-partner">
         <label>Business name <input name="business_name" required></label>
         <label>Business type
-          <select name="business_type"><option>Restaurant</option><option>Café</option><option>Bakery</option><option>Hotel or resort</option><option>Catering</option><option>Food stall or court</option></select>
+          <select name="business_type"><option>Restaurant</option><option>Café</option><option>Bakery</option><option>Hotel or resort</option><option>Catering</option><option>Food stall or court</option><option>Others</option></select>
+          <input name="business_type_other" placeholder="Type your business type, e.g. Food truck" hidden>
         </label>
         <label>Business address <input name="address" required></label>
         <label>Contact person <input name="contact_person" required></label>
         <label>Business email (this is your login) <input name="email" type="email" required></label>
         <label>Password <input name="password" type="password" minlength="8" required></label>
         <label>Phone number <input name="phone" type="tel" required></label>
+        <fieldset class="doc-group">
+          <legend>Proof of registered business</legend>
+          <p class="note">Upload a clear photo or scan of each document. PDF or image (JPG, PNG, ...), up to 2 MB each. Only the AllerLink team reviewing your application can see them.</p>
+          <div id="doc-fields"></div>
+        </fieldset>
         <label class="check"><input type="checkbox" name="consent" required> I acknowledge the privacy notice and agree to handle customer allergy information only for food-safety communication.</label>
         <button class="primary">Submit application</button>
       </form>
@@ -309,8 +315,9 @@
         <label>Business type
           <select name="business_type">
             <option>Restaurant</option><option>Café</option><option>Bakery</option>
-            <option>Hotel or resort</option><option>Catering</option><option>Food stall or court</option>
+            <option>Hotel or resort</option><option>Catering</option><option>Food stall or court</option><option>Others</option>
           </select>
+          <input name="business_type_other" placeholder="Type your business type, e.g. Food truck" hidden>
         </label>
         <label>Business address <input name="address"></label>
         <label>Contact person <input name="contact_person"></label>
@@ -482,6 +489,7 @@
   <script src="cardart.js"></script>
   <script src="card3d.js"></script>
   <script src="allergy-picker.js"></script>
+  <script src="business-documents.js"></script>
   <script src="app.js"></script>
   <script src="foods.js"></script>
   <script src="employee.js"></script>

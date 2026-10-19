@@ -293,10 +293,57 @@ document.getElementById("form-delivery").addEventListener("submit", async (e) =>
   show("done");
 });
 
+// ---------- Business type: "Others" lets the owner type their own ----------
+function updateBusinessTypeBox(form) {
+  const other = form.business_type_other;
+  other.hidden = form.business_type.value !== "Others";
+  other.required = !other.hidden; // a hidden box can never block the form
+}
+
+function wireBusinessType(form) {
+  form.business_type.addEventListener("change", () => {
+    updateBusinessTypeBox(form);
+    if (!form.business_type_other.hidden) form.business_type_other.focus();
+  });
+  updateBusinessTypeBox(form);
+}
+
+const readBusinessType = (form) =>
+  form.business_type.value === "Others" ? form.business_type_other.value.trim() : form.business_type.value;
+
+// A saved type that is not in the list is shown under "Others".
+function fillBusinessType(form, type) {
+  const known = [...form.business_type.options].some((option) => option.value === type && type !== "Others");
+  form.business_type.value = known ? type : "Others";
+  form.business_type_other.value = known ? "" : type;
+  updateBusinessTypeBox(form);
+}
+
+wireBusinessType(document.getElementById("form-partner"));
+wireBusinessType(document.getElementById("form-partner-profile"));
+
 // ---------- Establishment application ----------
+const docFields = document.getElementById("doc-fields");
+renderDocumentFields(docFields);
+
+// Uploads each picked document to private storage and returns { key: path }.
+async function uploadDocuments(userId, files) {
+  const paths = {};
+  for (const { key, file } of files) {
+    const extension = file.name.split(".").pop().toLowerCase().replace(/[^a-z0-9]/g, "");
+    const path = `${userId}/${key}.${extension}`;
+    const { error } = await db.storage.from(DOCUMENT_BUCKET).upload(path, file, { upsert: true, contentType: file.type });
+    if (error) throw error;
+    paths[key] = path;
+  }
+  return paths;
+}
+
 document.getElementById("form-partner").addEventListener("submit", async (e) => {
   e.preventDefault();
-  const { consent, password, ...application } = formData(e.target);
+  const { consent, password, business_type_other, ...application } = formData(e.target);
+  application.business_type = readBusinessType(e.target);
+  const files = chosenDocuments(docFields);
   if (db) {
     // The business registers its login now; an employee activates it by approving the application.
     let { data, error } = await db.auth.signUp({ email: application.email, password });
@@ -304,11 +351,18 @@ document.getElementById("form-partner").addEventListener("submit", async (e) => 
       ({ data, error } = await db.auth.signInWithPassword({ email: application.email, password })); // retry after an earlier failed attempt
     }
     if (error) return alert(error.message);
-    const { error: insertError } = await db.from("applications").insert({ ...application, user_id: data.user.id });
+    let documents;
+    try {
+      documents = await uploadDocuments(data.user.id, files);
+    } catch (uploadError) {
+      await db.auth.signOut();
+      return alert("Your documents could not be uploaded: " + uploadError.message);
+    }
+    const { error: insertError } = await db.from("applications").insert({ ...application, documents, user_id: data.user.id });
     await db.auth.signOut(); // they log in after approval
     if (insertError) return alert(insertError.message);
   } else {
-    demo.push("applications", application);
+    demo.push("applications", { ...application, documents: Object.fromEntries(files.map(({ key, file }) => [key, file.name])) });
   }
   show("partner-done");
 });
@@ -612,7 +666,7 @@ function fillPartnerProfile() {
   const form = document.getElementById("form-partner-profile");
   if (!form) return;
   form.business_name.value = est.business_name || "";
-  form.business_type.value = est.business_type || "Restaurant";
+  fillBusinessType(form, est.business_type || "Restaurant");
   form.address.value = est.address || "";
   form.contact_person.value = est.contact_person || "";
   form.email.value = est.email || "";
@@ -646,7 +700,7 @@ document.getElementById("form-partner-profile")?.addEventListener("submit", asyn
   // Only send real profile fields (avoid surprising columns / empty overwrites of id)
   const payload = {
     business_name: raw.business_name,
-    business_type: raw.business_type,
+    business_type: readBusinessType(e.target),
     address: raw.address,
     contact_person: raw.contact_person,
     email: raw.email,

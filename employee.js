@@ -251,10 +251,37 @@ function renderApplications() {
           </div>
           <p class="meta">${esc(a.address || "—")}</p>
           <p class="meta">${esc(a.contact_person || "—")} · ${esc(a.email || "—")} · ${esc(a.phone || "—")}</p>
+          <button class="link" data-act="docs" data-id="${a.id}">View documents</button>
+          <div id="docs-${a.id}"></div>
           ${applicationOutcome(a)}
         </div>`
       )
       .join("") || '<p class="note">No applications here.</p>';
+}
+
+// Shows the documents a business uploaded, as short-lived links (private storage).
+async function showApplicationDocuments(app, box) {
+  box.textContent = "Loading…";
+  const { data, error } = await db.rpc("employee_application_documents", { p_id: app.id });
+  if (error) {
+    box.textContent = error.message;
+    return;
+  }
+  const entries = Object.entries(data || {});
+  if (!entries.length) {
+    box.textContent = "No documents were uploaded.";
+    return;
+  }
+  const items = await Promise.all(
+    entries.map(async ([key, path]) => {
+      const label = BUSINESS_DOCUMENTS.find((doc) => doc.key === key)?.label ?? key;
+      const { data: signed } = await db.storage.from(DOCUMENT_BUCKET).createSignedUrl(path, 300);
+      return signed
+        ? `<li><a href="${esc(signed.signedUrl)}" target="_blank" rel="noopener">${esc(label)}</a></li>`
+        : `<li>${esc(label)} (could not be opened)</li>`;
+    })
+  );
+  box.innerHTML = `<ul class="doc-links">${items.join("")}</ul>`;
 }
 
 byId("ec-filter").addEventListener("click", (e) => {
@@ -268,6 +295,7 @@ byId("ec-list").addEventListener("click", async (e) => {
   const button = e.target.closest("[data-act]");
   const app = button && employeeApplications.find((a) => String(a.id) === button.dataset.id);
   if (!app) return;
+  if (button.dataset.act === "docs") return showApplicationDocuments(app, byId(`docs-${app.id}`));
   const approve = button.dataset.act === "approve";
   if (!confirm(`${approve ? "Approve" : "Reject"} ${app.business_name}?`)) return;
   const { error } = await db.rpc("employee_review_application", { p_id: app.id, p_approve: approve });

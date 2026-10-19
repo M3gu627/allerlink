@@ -339,3 +339,11 @@ button.ghost { background: #fff; color: var(--navy); border: 2px solid var(--nav
   body.menu-open .menu-backdrop { display: block; position: fixed; inset: 0; z-index: 60; background: rgba(13, 42, 92, .55); }
 }
 @media (max-width: 700px) and (prefers-reduced-motion: reduce) { #sidenav { transition: none; } }
+
+/* Business documents */
+.doc-group { border: 0; margin: 0; padding: 0; min-width: 0; }
+.doc-group legend { padding: 0; font-weight: 600; font-size: 1.1rem; color: var(--navy); }
+#doc-fields { display: grid; gap: .9rem; }
+.doc-field { gap: .15rem; }
+.doc-field small { font-weight: 400; }
+.doc-links { margin: .25rem 0 0; padding-left: 1.2rem; }
