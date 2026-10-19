@@ -21,6 +21,17 @@ const backButton = document.getElementById("btn-back");
 
 const layout = document.getElementById("layout");
 const sideNav = document.getElementById("sidenav");
+const menuButton = document.getElementById("btn-menu"); // hamburger, mobile only
+
+// Opens or closes the dashboard menu drawer on phones.
+function setMenu(open) {
+  document.body.classList.toggle("menu-open", open);
+  menuButton.setAttribute("aria-expanded", open);
+}
+menuButton.addEventListener("click", () => setMenu(!document.body.classList.contains("menu-open")));
+document.getElementById("btn-menu-close").addEventListener("click", () => setMenu(false));
+document.getElementById("menu-backdrop").addEventListener("click", () => setMenu(false));
+document.addEventListener("keydown", (e) => e.key === "Escape" && setMenu(false));
 // Pages that show the dashboard side menu, per account type.
 const sideNavViews = {
   customer: ["card", "foods", "wallet", "delivery", "done"],
@@ -58,6 +69,8 @@ function show(view, { isBack = false, reset = false } = {}) {
   const showSide = Boolean(sideNavViews[state.role]?.includes(view));
   layout.classList.toggle("with-side", showSide);
   sideNav.hidden = !showSide;
+  menuButton.hidden = !showSide;
+  setMenu(false); // every page change closes the drawer
   sideNav.querySelectorAll("[data-role]").forEach((group) => (group.hidden = group.dataset.role !== state.role));
   sideNav.querySelectorAll("[data-go]").forEach((item) => {
     if (item.dataset.go === view) item.setAttribute("aria-current", "page");

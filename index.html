@@ -8,6 +8,9 @@
 </head>
 <body>
   <header class="bar">
+    <button type="button" id="btn-menu" class="menu-toggle" aria-label="Open menu" aria-controls="sidenav" aria-expanded="false" hidden>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
     <a href="#" data-go="home" class="brand"><img src="logo.png" alt="AllerLink Technologies"></a>
     <nav>
       <button data-go="home">Home</button>
@@ -23,9 +26,11 @@
     </nav>
   </header>
 
+  <div class="menu-backdrop" id="menu-backdrop"></div>
+
   <div class="layout" id="layout">
     <aside id="sidenav" aria-label="Dashboard menu" hidden>
-      <img class="side-logo" src="logo.png" alt="AllerLink Technologies">
+      <button type="button" id="btn-menu-close" class="menu-close" aria-label="Close menu">×</button>
       <div data-role="customer">
         <button data-go="card"><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="20" height="14" x="2" y="5" rx="2"/><path d="M2 10h20"/></svg> My AllerCard</button>
         <button data-go="foods"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg> AllerFoods</button>
