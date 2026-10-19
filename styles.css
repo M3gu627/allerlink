@@ -347,3 +347,7 @@ button.ghost { background: #fff; color: var(--navy); border: 2px solid var(--nav
 .doc-field { gap: .15rem; }
 .doc-field small { font-weight: 400; }
 .doc-links { margin: .25rem 0 0; padding-left: 1.2rem; }
+
+/* Product Edit / Remove buttons */
+.product-actions { display: flex; gap: .5rem; flex: none; }
+@media (max-width: 700px) { .product-head { flex-wrap: wrap; } }

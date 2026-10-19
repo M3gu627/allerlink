@@ -771,7 +771,10 @@ async function renderProducts() {
           <p class="meta"></p>
           <p class="meta"></p>
         </div>
-        <button type="button" class="ghost danger-btn">Remove</button>
+        <div class="product-actions">
+          <button type="button" class="ghost edit-btn">Edit</button>
+          <button type="button" class="ghost danger-btn remove-btn">Remove</button>
+        </div>
       </div>`;
     card.querySelector("strong").textContent = `${p.name} · ${pesoFmt(p.price)}`;
     const thumb = card.querySelector(".product-thumb");
@@ -781,7 +784,8 @@ async function renderProducts() {
     }
     card.querySelectorAll(".meta")[0].textContent = p.ingredients ? `Ingredients: ${p.ingredients}` : "No ingredients listed";
     card.querySelectorAll(".meta")[1].textContent = allergens ? `Allergens: ${allergens}` : "Allergens: none listed";
-    card.querySelector("button").addEventListener("click", async () => {
+    card.querySelector(".edit-btn").addEventListener("click", () => startEditProduct(p));
+    card.querySelector(".remove-btn").addEventListener("click", async () => {
       if (!confirm(`Remove “${p.name}”?`)) return;
       if (db && state.establishment?.id && state.establishment.id !== "demo" && p.id && !String(p.id).startsWith("local-")) {
         const { error } = await db.from("partner_products").delete().eq("id", p.id);
@@ -789,6 +793,7 @@ async function renderProducts() {
       } else {
         writePartnerList("products", (await loadProducts()).filter((row) => row.id !== p.id));
       }
+      if (editingProduct?.id === p.id) resetProductForm();
       renderProducts();
     });
     list.append(card);
@@ -835,7 +840,57 @@ document.getElementById("product-image-input")?.addEventListener("change", async
   productPreviewWrap.hidden = false;
 });
 
-document.getElementById("form-product")?.addEventListener("submit", async (e) => {
+// ---------- Edit a posted product (reuses the Add product form) ----------
+const productForm = document.getElementById("form-product");
+const productFormTitle = document.getElementById("product-form-title");
+const productSubmit = document.getElementById("product-submit");
+const productCancel = document.getElementById("product-cancel");
+let editingProduct = null; // the product being edited, or null when adding a new one
+
+function startEditProduct(product) {
+  editingProduct = product;
+  const fields = productForm.elements;
+  fields.name.value = product.name;
+  fields.price.value = product.price;
+  fields.ingredients.value = product.ingredients || "";
+  fields.allergens.value = Array.isArray(product.allergens) ? product.allergens.join(", ") : product.allergens || "";
+  productImageInput.value = "";
+  productImage = product.image_url || ""; // the current photo stays unless it is changed or removed
+  productPreview.src = productImage;
+  productPreviewWrap.hidden = !productImage;
+  productFormTitle.textContent = "Edit product";
+  productSubmit.textContent = "Save changes";
+  productCancel.hidden = false;
+  productForm.scrollIntoView({ behavior: "smooth", block: "start" });
+  fields.name.focus();
+}
+
+function resetProductForm() {
+  editingProduct = null;
+  productForm.reset();
+  clearProductImage();
+  productFormTitle.textContent = "Add product";
+  productSubmit.textContent = "Add product";
+  productCancel.hidden = true;
+}
+
+productCancel.addEventListener("click", resetProductForm);
+
+async function saveProductChanges(product, changes) {
+  const isLocal = !product.id || String(product.id).startsWith("local-");
+  if (db && state.establishment?.id && state.establishment.id !== "demo" && !isLocal) {
+    const { error } = await db.from("partner_products").update(changes).eq("id", product.id);
+    if (error) {
+      alert(error.message);
+      return false;
+    }
+  } else {
+    writePartnerList("products", readPartnerList("products").map((row) => (row.id === product.id ? { ...row, ...changes } : row)));
+  }
+  return true;
+}
+
+productForm?.addEventListener("submit", async (e) => {
   e.preventDefault();
   const body = formData(e.target);
   const allergens = String(body.allergens || "")
@@ -849,7 +904,9 @@ document.getElementById("form-product")?.addEventListener("submit", async (e) =>
     allergens,
     image_url: productImage || null,
   };
-  if (db && state.establishment?.id && state.establishment.id !== "demo") {
+  if (editingProduct) {
+    if (!(await saveProductChanges(editingProduct, row))) return;
+  } else if (db && state.establishment?.id && state.establishment.id !== "demo") {
     const { error } = await db.from("partner_products").insert({
       ...row,
       establishment_id: state.establishment.id,
@@ -864,8 +921,7 @@ document.getElementById("form-product")?.addEventListener("submit", async (e) =>
     row.id = "local-" + crypto.randomUUID();
     writePartnerList("products", [row, ...readPartnerList("products")]);
   }
-  e.target.reset();
-  clearProductImage();
+  resetProductForm();
   renderProducts();
 });
 
