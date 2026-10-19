@@ -275,7 +275,7 @@ button.ghost { background: #fff; color: var(--navy); border: 2px solid var(--nav
                  stroke-linecap: round; stroke-linejoin: round; }
 
 /* Employee dashboard */
-#form-employee { max-width: 480px; }
+[data-view="employee-home"] { max-width: 480px; margin: 0 auto; } /* centers the title, note and form together */
 #form-employee input[readonly] { background: #f0f4f9; color: #3a4a5a; cursor: default; border-color: #c8d4e4; }
 #eu-search, #eb-search { width: 100%; max-width: 380px; margin-bottom: 1rem; }
 .row-actions { white-space: nowrap; }
