@@ -300,3 +300,19 @@ button.ghost { background: #fff; color: var(--navy); border: 2px solid var(--nav
 #product-image-preview { width: 120px; height: 120px; }
 .dish-img { width: 72px; height: 72px; object-fit: cover; border-radius: 10px; flex: none; }
 .dish > div { flex: 1; }
+
+/* Allergy dropdown */
+.allergy-field { border: 0; margin: 0; padding: 0; min-width: 0; }
+.allergy-field legend { padding: 0; margin-bottom: .25rem; font-weight: 600; }
+.allergy-dropdown { border: 1px solid var(--line); border-radius: 6px; background: #fff; }
+.allergy-dropdown summary { padding: .55rem .7rem; cursor: pointer; overflow: hidden;
+                            text-overflow: ellipsis; white-space: nowrap; text-transform: capitalize; }
+.allergy-options { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: .6rem;
+                   padding: .75rem; border-top: 1px solid var(--line); }
+.allergy-options input[type="checkbox"] { width: auto; padding: 0; margin-top: .3rem; }
+.allergy-other { grid-column: 1 / -1; display: grid; gap: .6rem; }
+.allergy-add { display: flex; gap: .5rem; }
+.allergy-add input { flex: 1; min-width: 0; }
+.allergy-add button { padding: .45rem 1rem; }
+.chip-remove { background: none; border: 0; padding: 0 .1rem; margin-left: .2rem; color: var(--navy);
+               font: inherit; font-weight: 700; cursor: pointer; }
