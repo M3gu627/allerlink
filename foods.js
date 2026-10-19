@@ -48,7 +48,7 @@ async function loadFoods() {
   // Partner restaurants + their products (preferred)
   const [estRes, prodRes] = await Promise.all([
     db.from("establishments").select("id, business_name, logo_url, active").eq("active", true),
-    db.from("partner_products").select("id, establishment_id, name, price, ingredients, allergens, available").eq("available", true),
+    db.from("partner_products").select("id, establishment_id, name, price, ingredients, allergens, available, image_url").eq("available", true),
   ]);
 
   if (!estRes.error && !prodRes.error && (estRes.data?.length || 0) > 0) {
@@ -64,6 +64,7 @@ async function loadFoods() {
             price: Number(p.price),
             allergens: Array.isArray(p.allergens) ? p.allergens : [],
             ingredients: p.ingredients || "",
+            image: p.image_url || "",
             restaurant: est.business_name || "Partner",
             logo: est.logo_url || "",
             source: "partner",
@@ -148,7 +149,9 @@ function renderRestaurantMenu(restId) {
       const blocked = conflicts(item);
       const contains = item.allergens.length ? "Contains: " + item.allergens.join(", ") : "No listed allergens";
       const ingredients = item.ingredients ? `<br>${esc("Ingredients: " + item.ingredients)}` : "";
+      const photo = item.image ? `<img class="dish-img" src="${esc(item.image)}" alt="${esc(item.name)}">` : "";
       return `<div class="dish ${blocked.length ? "unsafe" : ""}">
+        ${photo}
         <div><b>${esc(item.name)}</b><br>
           <small>${peso(item.price)} · ${esc(contains)}${ingredients}</small></div>
         ${

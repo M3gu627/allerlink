@@ -293,3 +293,10 @@ button.ghost { background: #fff; color: var(--navy); border: 2px solid var(--nav
 .detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: .75rem 1.5rem; }
 .detail-grid div { display: grid; }
 .detail-grid small { color: #5a6b7a; }
+
+/* Product photos */
+.product-thumb { width: 72px; height: 72px; object-fit: cover; border-radius: 10px; flex: none; }
+.product-text { flex: 1; }
+#product-image-preview { width: 120px; height: 120px; }
+.dish-img { width: 72px; height: 72px; object-fit: cover; border-radius: 10px; flex: none; }
+.dish > div { flex: 1; }

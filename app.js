@@ -694,7 +694,8 @@ async function renderProducts() {
     const allergens = Array.isArray(p.allergens) ? p.allergens.join(", ") : (p.allergens || "");
     card.innerHTML = `
       <div class="product-head">
-        <div>
+        <img class="product-thumb" alt="" hidden>
+        <div class="product-text">
           <strong></strong>
           <p class="meta"></p>
           <p class="meta"></p>
@@ -702,6 +703,11 @@ async function renderProducts() {
         <button type="button" class="ghost danger-btn">Remove</button>
       </div>`;
     card.querySelector("strong").textContent = `${p.name} · ${pesoFmt(p.price)}`;
+    const thumb = card.querySelector(".product-thumb");
+    if (p.image_url) {
+      thumb.src = p.image_url;
+      thumb.hidden = false;
+    }
     card.querySelectorAll(".meta")[0].textContent = p.ingredients ? `Ingredients: ${p.ingredients}` : "No ingredients listed";
     card.querySelectorAll(".meta")[1].textContent = allergens ? `Allergens: ${allergens}` : "Allergens: none listed";
     card.querySelector("button").addEventListener("click", async () => {
@@ -718,6 +724,36 @@ async function renderProducts() {
   }
 }
 
+// Shrinks a chosen photo to a small JPEG data URL so it stays light in the database.
+function resizeImage(file, maxSize = 640) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const scale = Math.min(1, maxSize / Math.max(img.width, img.height));
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.round(img.width * scale);
+      canvas.height = Math.round(img.height * scale);
+      canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(img.src);
+      resolve(canvas.toDataURL("image/jpeg", 0.8));
+    };
+    img.onerror = reject;
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+let productImage = ""; // photo chosen in the Add product form
+const productPreview = document.getElementById("product-image-preview");
+
+document.getElementById("product-image-input")?.addEventListener("change", async (e) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  if (!file.type.startsWith("image/")) return alert("Please choose an image file.");
+  productImage = await resizeImage(file);
+  productPreview.src = productImage;
+  productPreview.hidden = false;
+});
+
 document.getElementById("form-product")?.addEventListener("submit", async (e) => {
   e.preventDefault();
   const body = formData(e.target);
@@ -730,6 +766,7 @@ document.getElementById("form-product")?.addEventListener("submit", async (e) =>
     price: Number(body.price),
     ingredients: body.ingredients || "",
     allergens,
+    image_url: productImage || null,
   };
   if (db && state.establishment?.id && state.establishment.id !== "demo") {
     const { error } = await db.from("partner_products").insert({
@@ -747,6 +784,8 @@ document.getElementById("form-product")?.addEventListener("submit", async (e) =>
     writePartnerList("products", [row, ...readPartnerList("products")]);
   }
   e.target.reset();
+  productImage = "";
+  productPreview.hidden = true;
   renderProducts();
 });
 
