@@ -11,16 +11,36 @@ let restaurants = [];
 let activeRestaurantId = null;
 const cart = {}; // item id -> quantity
 
+let pointsBalance = 0; // the customer's points, 1 point = ₱1 off
+
 function resetCart() {
   for (const id in cart) delete cart[id];
+  document.getElementById("use-points").checked = false;
   renderCart();
 }
 
+// Points to spend on this total: all of them, but never more than the order is worth.
+function pointsToUse(total) {
+  return document.getElementById("use-points").checked ? Math.min(pointsBalance, Math.floor(total)) : 0;
+}
+
+const orderMessage = (data) =>
+  `Order placed: ${peso(data.total)}` +
+  (data.points_used ? ` (${data.points_used} points used)` : "") +
+  `. You earned ${data.points} point${data.points === 1 ? "" : "s"}.`;
+
+// Words of the same type map to one group, so a "shellfish" allergy also blocks shrimp, crab, etc.
 const ALLERGEN_ALIASES = {
   shrimp: "shellfish", crab: "shellfish", lobster: "shellfish", prawn: "shellfish",
-  milk: "dairy", cheese: "dairy", butter: "dairy",
-  egg: "eggs", wheat: "gluten", peanut: "peanuts",
-  nuts: "tree nuts", almond: "tree nuts", cashew: "tree nuts",
+  clam: "shellfish", mussel: "shellfish", oyster: "shellfish", scallop: "shellfish", squid: "shellfish",
+  milk: "dairy", cheese: "dairy", butter: "dairy", cream: "dairy", yogurt: "dairy", whey: "dairy",
+  egg: "eggs", wheat: "gluten", flour: "gluten", barley: "gluten", rye: "gluten",
+  peanut: "peanuts",
+  nuts: "tree nuts", almond: "tree nuts", cashew: "tree nuts", walnut: "tree nuts",
+  pecan: "tree nuts", pistachio: "tree nuts", hazelnut: "tree nuts",
+  salmon: "fish", tuna: "fish", tilapia: "fish", anchovy: "fish",
+  soya: "soy", soybean: "soy", tofu: "soy",
+  tahini: "sesame",
 };
 const normalize = (word) => ALLERGEN_ALIASES[word.trim().toLowerCase()] ?? word.trim().toLowerCase();
 
@@ -113,6 +133,8 @@ async function loadFoods() {
     restaurants = [...byRest.values()];
   }
 
+  const { data: wallet } = await db.rpc("get_wallet");
+  pointsBalance = wallet?.points ?? 0;
   renderRestaurantList();
   renderCart();
 }
@@ -194,8 +216,14 @@ function renderCart() {
         )
         .join("")
     : "<li class=\"note\">Your cart is empty.</li>";
+  const used = pointsToUse(total);
   document.getElementById("cart-total").textContent = peso(total);
-  document.getElementById("cart-points").textContent = Math.floor(total / 10);
+  document.getElementById("cart-points").textContent = lines.length ? 1 : 0;
+  document.getElementById("points-available").textContent = pointsBalance;
+  document.getElementById("use-points-row").hidden = pointsBalance === 0;
+  document.getElementById("discount-line").hidden = used === 0;
+  document.getElementById("cart-discount").textContent = peso(used);
+  document.getElementById("cart-pay").textContent = peso(total - used);
 }
 
 document.getElementById("menu").addEventListener("click", (e) => {
@@ -233,6 +261,8 @@ document.getElementById("cart-lines").addEventListener("click", (e) => {
   }
 });
 
+document.getElementById("use-points").addEventListener("change", renderCart);
+
 document.getElementById("btn-place-order").addEventListener("click", async () => {
   const ids = Object.keys(cart);
   if (!ids.length) return alert("Your cart is empty.");
@@ -241,6 +271,7 @@ document.getElementById("btn-place-order").addEventListener("click", async () =>
     return alert("Your cart has a dish that conflicts with your allergy profile.");
   }
   const method = document.getElementById("pay-method").value;
+  let usePoints = pointsToUse(lines.reduce((sum, item) => sum + item.price * cart[item.id], 0));
 
   const partnerLines = lines.filter((i) => i.source === "partner");
   const sampleLines = lines.filter((i) => i.source === "sample");
@@ -248,25 +279,26 @@ document.getElementById("btn-place-order").addEventListener("click", async () =>
   try {
     if (sampleLines.length) {
       const items = sampleLines.map((i) => ({ id: Number(i.rawId), qty: cart[i.id] }));
-      const { data, error } = await db.rpc("place_food_order", { cart: items, method });
+      const { data, error } = await db.rpc("place_food_order", { cart: items, method, use_points: usePoints });
       if (error) return alert(error.message);
       for (const i of sampleLines) delete cart[i.id];
+      usePoints = 0; // already spent on this order
       if (!partnerLines.length) {
         resetCart();
-        alert(`Order placed: ${peso(data.total)}. You earned ${data.points} points.`);
+        alert(orderMessage(data));
         return show("wallet");
       }
     }
 
     if (partnerLines.length) {
       const items = partnerLines.map((i) => ({ id: Number(i.rawId), qty: cart[i.id] }));
-      const { data, error } = await db.rpc("place_partner_food_order", { cart: items, method });
+      const { data, error } = await db.rpc("place_partner_food_order", { cart: items, method, use_points: usePoints });
       if (error) {
         // Fallback: still clear UI feedback if function is missing
         return alert(error.message + " — run foods-partner.sql in Supabase to enable partner checkout.");
       }
       resetCart();
-      alert(`Order placed: ${peso(data.total)}. You earned ${data.points} points.`);
+      alert(orderMessage(data));
       return show("wallet");
     }
 
@@ -290,14 +322,14 @@ function loadWallet() {
 
 async function loadHistory() {
   const [foods, cards] = await Promise.all([
-    db.from("food_orders").select("total, payment_method, created_at").order("created_at", { ascending: false }),
+    db.from("food_orders").select("total, payment_method, created_at, points_used").order("created_at", { ascending: false }),
     db.from("orders").select("status, payment_method"),
   ]);
   const rows = [
     ...(cards.data ?? []).map((o) => `<li>AllerCard order · ${esc(o.status)} · ${esc(o.payment_method ?? "")}</li>`),
     ...(foods.data ?? []).map(
       (o) => `<li>${new Date(o.created_at).toLocaleDateString()} · AllerFoods ·
-      ${peso(o.total)} · ${esc(o.payment_method)}</li>`
+      ${peso(o.total)}${o.points_used ? ` (${o.points_used} points used)` : ""} · ${esc(o.payment_method)}</li>`
     ),
   ];
   document.getElementById("history").innerHTML = rows.join("") || "<li>No orders yet.</li>";

@@ -87,15 +87,29 @@
 
     <!-- 3. CUSTOMER FLOW -->
     <section data-view="privacy" hidden>
-      <h2>Before we collect your allergy information</h2>
-      <p>Under the Data Privacy Act, here is how we handle your data:</p>
-      <ul>
-        <li><b>What:</b> name, email, birthday, allergies, optional emergency notes.</li>
-        <li><b>Why:</b> to build your AllerCard and show your allergies to partner staff.</li>
-        <li><b>Who sees it:</b> partner staff see it only after scanning your card, and only for that scan.</li>
-        <li><b>Protection:</b> encrypted connection, access controls, no allergy data inside the QR code.</li>
-        <li><b>Retention:</b> kept while your account is active. You can ask for correction or deletion anytime.</li>
-      </ul>
+      <h2>Before We Collect Your Information</h2>
+      <p>Your privacy matters to us. Here is how AllerEats plans to collect and use your personal information.</p>
+
+      <h3>What We Collect</h3>
+      <p>Your name, email address, delivery details, food preferences, order information, and food allergy information you provide.</p>
+
+      <h3>Why We Collect It</h3>
+      <p>To help you discover partner food establishments, browse menus, place and manage orders, personalize your food experience, and provide allergy-related information when needed.</p>
+
+      <h3>How Your Allergy Information Is Shared</h3>
+      <p>If you choose to use the AllerCard, authorized personnel at participating food establishments may view your relevant allergy information after scanning your card. This helps restaurant staff identify your declared allergies and take them into consideration when handling your order.</p>
+
+      <h3>How We Protect Your Information</h3>
+      <p>We plan to implement appropriate security measures and access controls to protect your personal information. Your allergy details will not be stored directly in the QR code.</p>
+
+      <h3>How Long We Keep Your Information</h3>
+      <p>We will retain your information only for as long as necessary for the stated purposes or as required by applicable law.</p>
+
+      <h3>Your Privacy Rights</h3>
+      <p>You may exercise your applicable privacy rights, including requesting access to or correction of your information and requesting its deletion, subject to applicable legal requirements.</p>
+
+      <p class="notice"><b>Important Food Safety Notice:</b> AllerFoods and AllerCard help communicate food allergy information but cannot guarantee that food is allergen-free or prevent all risks of cross-contact.</p>
+
       <label class="check"><input type="checkbox" id="consent-customer"> I have read this notice and consent to the processing of my allergy information.</label>
       <div class="actions"><button class="primary" id="btn-consent">Continue</button></div>
       <p>Already have an account? <a href="#" data-go="login" data-kind="customer">Log in</a></p>
@@ -180,7 +194,12 @@
       <div class="panel">
         <h3>Your order</h3>
         <ul id="cart-lines"></ul>
-        <p>Total: <b id="cart-total">₱0.00</b> · You earn <b id="cart-points">0</b> points</p>
+        <p>Total: <b id="cart-total">₱0.00</b> · You earn <b id="cart-points">0</b> point per order</p>
+        <label class="check" id="use-points-row" hidden>
+          <input type="checkbox" id="use-points">
+          <span>Use my points (<b id="points-available">0</b> available, 1 point = ₱1 off)</span>
+        </label>
+        <p id="discount-line" hidden>Points discount: −<b id="cart-discount">₱0.00</b> · You pay <b id="cart-pay">₱0.00</b></p>
         <label>Payment method
           <select id="pay-method">
             <option value="wallet">AllerPass Wallet</option>
