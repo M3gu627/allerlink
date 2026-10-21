@@ -47,6 +47,7 @@
         <button data-go="employee-users"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Users</button>
         <button data-go="employee-businesses"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg> Businesses</button>
         <button data-go="employee-confirmations"><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="8" height="4" x="8" y="2" rx="1" ry="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><path d="m9 14 2 2 4-4"/></svg> Confirmation</button>
+        <button data-go="employee-promos"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg> Promotions</button>
       </div>
       <div data-role="establishment">
         <button data-go="partner-home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Profile</button>
@@ -149,14 +150,20 @@
       <h3>Your favorite restaurants</h3>
       <div class="rest-grid" id="home-favorites"></div>
 
-      <h3>Promos</h3>
-      <div class="promo-grid" id="home-promos"></div>
+      <div id="home-promos-block" hidden>
+        <h3>Promos</h3>
+        <div class="promo-grid" id="home-promos"></div>
+      </div>
 
-      <h3>Events</h3>
-      <ul class="event-list" id="home-events"></ul>
+      <div id="home-events-block" hidden>
+        <h3>Events</h3>
+        <ul class="event-list" id="home-events"></ul>
+      </div>
 
-      <h3>Sponsored</h3>
-      <div class="promo-grid" id="home-ads"></div>
+      <div id="home-ads-block" hidden>
+        <h3>Sponsored</h3>
+        <div class="promo-grid" id="home-ads"></div>
+      </div>
     </section>
 
     <section data-view="orders" hidden>
@@ -530,6 +537,35 @@
       <div id="ec-list" class="list-stack"></div>
     </section>
 
+    <section data-view="employee-promos" hidden>
+      <h2>Promotions</h2>
+      <p class="note">Promos, events and ads you add here appear on every customer's Home page.</p>
+      <form class="panel account-form" id="form-promo">
+        <h3 id="promo-form-heading">Add promotion</h3>
+        <label>Type
+          <select name="kind">
+            <option value="promo">Promo</option>
+            <option value="event">Event</option>
+            <option value="ad">Ad (sponsored)</option>
+          </select>
+        </label>
+        <label>Title <input name="title" required maxlength="80"></label>
+        <label>Details <textarea name="details" rows="4" required maxlength="600" placeholder="What is it, who is it for, how to join or claim it"></textarea></label>
+        <label>Start or event date (optional) <input name="starts_on" type="date"></label>
+        <label>End date (optional, it hides itself after this day) <input name="ends_on" type="date"></label>
+        <label>Link (optional) <input name="link_url" type="url" placeholder="https://"></label>
+        <label>Picture (optional) <input type="file" id="promo-image-input" accept="image/*"></label>
+        <div id="promo-image-wrap" class="photo-preview promo-preview" hidden>
+          <img id="promo-image-preview" alt="Picture preview">
+          <button type="button" id="promo-image-remove" aria-label="Remove picture">×</button>
+        </div>
+        <label class="check"><input type="checkbox" name="active" checked> Show on customer Home</label>
+        <button class="primary" type="submit" id="promo-submit">Add promotion</button>
+        <button class="ghost" type="button" id="promo-cancel" hidden>Cancel</button>
+      </form>
+      <div class="list-stack" id="promo-list"></div>
+    </section>
+
     <section data-view="dashboard" hidden>
       <h2>Scan AllerCard</h2>
       <div class="stats"><div class="stat"><small>Total scans</small><b id="stat-total">0</b></div></div>
@@ -575,9 +611,9 @@
   <script src="diets.js"></script>
   <script src="app.js"></script>
   <script src="foods.js"></script>
-  <script src="promos.js"></script>
   <script src="customer-home.js"></script>
   <script src="employee.js"></script>
+  <script src="employee-promos.js"></script>
   <script src="card-zoom.js"></script>
 </body>
 </html>

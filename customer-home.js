@@ -1,4 +1,4 @@
-// Customer Home, Favorites and Settings pages.
+// Customer Home, Favorites and Settings pages. Promos, events and ads come from the promotions table.
 // Uses db, state, show() from app.js, and esc(), peso(), fetchRestaurants(), restaurants, menuItems,
 // conflicts(), selectedDiets, restaurantCardHtml(), openRestaurant() from foods.js.
 const el = (id) => document.getElementById(id);
@@ -7,12 +7,12 @@ const el = (id) => document.getElementById(id);
 async function loadCustomerHome() {
   const firstName = (state.customer?.display_name || "").trim().split(" ")[0];
   el("home-welcome").textContent = firstName ? `Welcome back, ${firstName}!` : "Welcome back!";
-  renderHomeExtras();
   if (!db) return;
 
   const [orders, wallet] = await Promise.all([
     db.from("food_orders").select("total, created_at").order("created_at", { ascending: false }),
     db.rpc("get_wallet"),
+    renderPromotions(),
   ]);
   const list = orders.data ?? [];
   const spent = list.reduce((sum, order) => sum + Number(order.total), 0);
@@ -56,27 +56,53 @@ function renderRecommended() {
       .join("") || '<p class="note">No safe dishes to recommend yet. Check back when restaurants post their menus.</p>';
 }
 
-// Promos, events and ads come from promos.js
-function renderHomeExtras() {
-  el("home-promos").innerHTML = HOME_PROMOS.map(
-    (promo) => `<article class="panel promo-card">
-      <span class="chip">${esc(promo.tag)}</span>
-      <b>${esc(promo.title)}</b>
-      <small>${esc(promo.text)}</small>
-      ${promo.go ? `<button class="ghost" data-go="${esc(promo.go)}">${esc(promo.cta)}</button>` : ""}
-    </article>`
-  ).join("");
-  el("home-events").innerHTML = HOME_EVENTS.map(
-    (event) => `<li class="panel"><small>${esc(event.when)}</small><b>${esc(event.title)}</b><span>${esc(event.text)}</span></li>`
-  ).join("");
-  el("home-ads").innerHTML = HOME_ADS.map(
-    (ad) => `<article class="panel ad-card">
-      <span class="ad-label">Ad</span>
-      <b>${esc(ad.title)}</b>
-      <small>${esc(ad.text)}</small>
-      <a href="${esc(ad.href)}">${esc(ad.cta)}</a>
-    </article>`
-  ).join("");
+// ---------- Promos, events and ads (added by employees) ----------
+const todayIso = () => new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD in local time
+const formatDay = (iso) => new Date(iso + "T00:00:00").toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+const safeLink = (url) => (/^https?:\/\//i.test(url || "") ? url : ""); // only real web links are clickable
+
+function promoDates(promo) {
+  if (promo.starts_on && promo.ends_on) return `${formatDay(promo.starts_on)} – ${formatDay(promo.ends_on)}`;
+  if (promo.starts_on) return promo.kind === "event" ? formatDay(promo.starts_on) : `From ${formatDay(promo.starts_on)}`;
+  if (promo.ends_on) return `Until ${formatDay(promo.ends_on)}`;
+  return "";
+}
+
+// Live now: switched on, already started (events are shown ahead of time), and not past its last day.
+function isPromoLive(promo) {
+  const today = todayIso();
+  const lastDay = promo.ends_on ?? (promo.kind === "event" ? promo.starts_on : null);
+  if (!promo.active || (lastDay && lastDay < today)) return false;
+  return promo.kind === "event" || !promo.starts_on || promo.starts_on <= today;
+}
+
+async function renderPromotions() {
+  const { data } = await db.from("promotions").select("*").order("created_at", { ascending: false });
+  const live = (data ?? []).filter(isPromoLive);
+  const picture = (promo, cls) => (promo.image_url ? `<img class="${cls}" src="${esc(promo.image_url)}" alt="">` : "");
+  const link = (promo) => {
+    const href = safeLink(promo.link_url);
+    return href ? `<a href="${esc(href)}" target="_blank" rel="noopener">Learn more</a>` : "";
+  };
+  const dates = (promo) => (promoDates(promo) ? `<small>${esc(promoDates(promo))}</small>` : "");
+
+  const promos = live.filter((p) => p.kind === "promo");
+  const events = live.filter((p) => p.kind === "event").sort((a, b) => (a.starts_on || "9").localeCompare(b.starts_on || "9"));
+  const ads = live.filter((p) => p.kind === "ad");
+
+  el("home-promos").innerHTML = promos
+    .map((p) => `<article class="panel promo-card">${picture(p, "promo-img")}<span class="chip">Promo</span><b>${esc(p.title)}</b><small>${esc(p.details)}</small>${dates(p)}${link(p)}</article>`)
+    .join("");
+  el("home-events").innerHTML = events
+    .map((p) => `<li class="panel">${picture(p, "promo-img")}${dates(p)}<b>${esc(p.title)}</b><span>${esc(p.details)}</span>${link(p)}</li>`)
+    .join("");
+  el("home-ads").innerHTML = ads
+    .map((p) => `<article class="panel ad-card"><span class="ad-label">Ad</span>${picture(p, "promo-img")}<b>${esc(p.title)}</b><small>${esc(p.details)}</small>${link(p)}</article>`)
+    .join("");
+
+  el("home-promos-block").hidden = !promos.length;
+  el("home-events-block").hidden = !events.length;
+  el("home-ads-block").hidden = !ads.length;
 }
 
 // ---------- Favorites ----------

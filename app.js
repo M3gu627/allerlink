@@ -36,7 +36,7 @@ document.addEventListener("keydown", (e) => e.key === "Escape" && setMenu(false)
 const sideNavViews = {
   customer: ["customer-home", "foods", "orders", "allergy", "favorites", "wallet", "card", "account", "settings", "delivery", "done"],
   establishment: ["partner-home", "partner-products", "partner-sales", "dashboard"],
-  employee: ["employee-home", "employee-users", "employee-businesses", "employee-confirmations"],
+  employee: ["employee-home", "employee-users", "employee-businesses", "employee-confirmations", "employee-promos"],
 };
 const roleHome = { customer: "customer-home", establishment: "dashboard", employee: "employee-home" };
 const customerViews = ["customer-home", "foods", "orders", "allergy", "favorites", "wallet", "card", "account", "settings"]; // need a signed-in customer
@@ -65,6 +65,7 @@ function show(view, { isBack = false, reset = false } = {}) {
   if (view === "employee-users") loadEmployeeUsers();
   if (view === "employee-businesses") loadEmployeeBusinesses();
   if (view === "employee-confirmations") loadEmployeeConfirmations();
+  if (view === "employee-promos") loadEmployeePromos();
 
   const showSide = Boolean(sideNavViews[state.role]?.includes(view));
   layout.classList.toggle("with-side", showSide);
