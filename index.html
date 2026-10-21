@@ -190,7 +190,7 @@
     <section data-view="foods" hidden>
       <h2>AllerFoods</h2>
       <p class="note">Pick a partner restaurant to see their posted menu. Dishes are checked against your allergy profile. Confirm ingredients with staff — AllerFoods cannot guarantee an allergen-free meal.</p>
-      <div class="filters" id="diet-filter" aria-label="Dietary filter"></div>
+      <div id="diet-filter"></div>
       <div id="menu"></div>
       <div class="panel">
         <h3>Your order</h3>
@@ -362,7 +362,7 @@
         <label>Price (₱) <input name="price" type="number" min="1" step="0.01" required></label>
         <label>Ingredients <input name="ingredients" placeholder="chicken, rice, garlic, oil"></label>
         <label>Allergens (comma-separated) <input name="allergens" placeholder="gluten, dairy"></label>
-        <fieldset class="diet-field"><legend>Dietary tags (optional)</legend><div class="diet-options" id="product-diets"></div></fieldset>
+        <fieldset class="diet-field"><legend>Dietary tags (optional)</legend><div id="product-diets"></div></fieldset>
         <label>Photo (optional) <input type="file" id="product-image-input" accept="image/*"></label>
         <div id="product-image-wrap" class="photo-preview" hidden>
           <img id="product-image-preview" alt="Photo preview">

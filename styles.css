@@ -365,4 +365,19 @@ button.ghost { background: #fff; color: var(--navy); border: 2px solid var(--nav
 .diet-field legend { padding: 0; margin-bottom: .25rem; font-weight: 600; }
 .diet-options { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; }
 .diet-options input[type="checkbox"] { width: auto; padding: 0; margin-top: .3rem; }
-#diet-filter { align-items: center; }
+
+/* Diet dropdown (filter and dish tags) */
+.diet-picker { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; margin: .5rem 0 1rem; }
+.diet-dropdown { position: relative; }
+.diet-dropdown summary { list-style: none; cursor: pointer; padding: .45rem 1rem; background: #fff; color: var(--navy);
+                         border: 1px solid var(--line); border-radius: 999px; font-weight: 700; }
+.diet-dropdown summary::-webkit-details-marker { display: none; }
+.diet-dropdown summary::after { content: " ▾"; }
+.diet-dropdown[open] summary { border-color: var(--blue); }
+.diet-panel { position: absolute; z-index: 30; left: 0; top: calc(100% + .35rem); width: min(340px, 88vw);
+              display: grid; gap: .5rem; padding: .75rem; background: #fff; border: 1px solid var(--line);
+              border-radius: 10px; box-shadow: 0 6px 18px rgba(13, 42, 92, .18); }
+.diet-list { display: grid; gap: .3rem; max-height: 260px; overflow-y: auto; }
+.diet-group { margin: .5rem 0 .1rem; font-size: .75rem; font-weight: 700; text-transform: uppercase; color: #5a6b7a; }
+.diet-list input[type="checkbox"] { width: auto; padding: 0; margin-top: .3rem; }
+.diet-chips { display: flex; flex-wrap: wrap; gap: .4rem; }

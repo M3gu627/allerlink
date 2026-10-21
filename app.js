@@ -860,7 +860,7 @@ function startEditProduct(product) {
   fields.price.value = product.price;
   fields.ingredients.value = product.ingredients || "";
   fields.allergens.value = Array.isArray(product.allergens) ? product.allergens.join(", ") : product.allergens || "";
-  productDiets.querySelectorAll("input").forEach((box) => (box.checked = (product.diets || []).includes(box.value)));
+  productDiets.set(product.diets || []);
   productImageInput.value = "";
   productImage = product.image_url || ""; // the current photo stays unless it is changed or removed
   productPreview.src = productImage;
@@ -875,6 +875,7 @@ function startEditProduct(product) {
 function resetProductForm() {
   editingProduct = null;
   productForm.reset();
+  productDiets.set([]);
   clearProductImage();
   productFormTitle.textContent = "Add product";
   productSubmit.textContent = "Add product";
@@ -883,11 +884,8 @@ function resetProductForm() {
 
 productCancel.addEventListener("click", resetProductForm);
 
-const productDiets = document.getElementById("product-diets");
-productDiets.innerHTML = DIETS.map(
-  ({ key, label }) => `<label class="check"><input type="checkbox" value="${key}"> ${label}</label>`
-).join("");
-const pickedDiets = () => [...productDiets.querySelectorAll("input:checked")].map((box) => box.value);
+const productDiets = createDietPicker(document.getElementById("product-diets"), { label: "Select dietary tags" });
+const pickedDiets = () => productDiets.get();
 
 async function saveProductChanges(product, changes) {
   const isLocal = !product.id || String(product.id).startsWith("local-");

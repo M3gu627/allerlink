@@ -83,27 +83,21 @@ try {
 
 const visibleDishes = (rest) => rest.products.filter((item) => dishMatchesDiets(item.diets || [], selectedDiets));
 
-function renderDietFilter() {
-  document.getElementById("diet-filter").innerHTML =
-    '<span class="note">Dietary filter:</span>' +
-    DIETS.map(
-      ({ key, label }) => `<button type="button" data-diet="${key}" aria-pressed="${selectedDiets.includes(key)}">${label}</button>`
-    ).join("");
-}
-
-document.getElementById("diet-filter").addEventListener("click", (e) => {
-  const button = e.target.closest("[data-diet]");
-  if (!button) return;
-  const key = button.dataset.diet;
-  selectedDiets = selectedDiets.includes(key) ? selectedDiets.filter((diet) => diet !== key) : [...selectedDiets, key];
-  try {
-    localStorage.setItem("allerlink_diets", JSON.stringify(selectedDiets));
-  } catch (error) {
-    // storage unavailable: the filter just will not be remembered
-  }
-  renderDietFilter();
-  if (activeRestaurantId) renderRestaurantMenu(activeRestaurantId);
-  else renderRestaurantList();
+createDietPicker(document.getElementById("diet-filter"), {
+  label: "Filter by diet",
+  withAll: true,
+  selected: selectedDiets,
+  note: "Dietary tags are set by each restaurant. Confirm with staff.",
+  onChange(list) {
+    selectedDiets = list;
+    try {
+      localStorage.setItem("allerlink_diets", JSON.stringify(selectedDiets));
+    } catch (error) {
+      // storage unavailable: the filter just will not be remembered
+    }
+    if (activeRestaurantId) renderRestaurantMenu(activeRestaurantId);
+    else renderRestaurantList();
+  },
 });
 
 function logoHtml(url, name) {
@@ -191,7 +185,6 @@ async function loadFoods() {
 
   const { data: wallet } = await db.rpc("get_wallet");
   pointsBalance = wallet?.points ?? 0;
-  renderDietFilter();
   renderRestaurantList();
   renderCart();
 }
