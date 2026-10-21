@@ -81,7 +81,8 @@ button.ghost { background: #fff; color: var(--navy); border: 2px solid var(--nav
 .chip { padding: .25rem .8rem; background: #e8f0fe; color: var(--navy); border-radius: 999px; font-weight: 600; }
 .dish { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: .6rem;
         padding: .75rem 1rem; background: #fff; border: 1px solid var(--line); border-radius: 10px; }
-.dish.unsafe { opacity: .6; }
+.dish.unsafe { background: #fff7f7; border-color: #f0b4b4; }
+.dish.unsafe .dish-img { opacity: .6; }
 .tag { padding: .2rem .6rem; background: #fde8e8; color: #a12626; border-radius: 6px;
        font-size: .85rem; font-weight: 600; white-space: nowrap; }
 .link { background: none; border: 0; padding: 0; color: var(--navy); font: inherit; text-decoration: underline; cursor: pointer; }
@@ -356,3 +357,12 @@ button.ghost { background: #fff; color: var(--navy); border: 2px solid var(--nav
 [data-view="privacy"] h3 { margin: 1.25rem 0 .25rem; font-size: 1.05rem; color: var(--navy); }
 [data-view="privacy"] h3 + p { margin-top: 0; }
 .notice { padding: .75rem 1rem; background: #f3f7fe; border-left: 4px solid var(--blue); border-radius: 6px; }
+
+/* Allergy warning + dietary tags */
+.allergy-warning { margin-top: .4rem; padding: .4rem .6rem; background: #fde8e8; color: #a12626;
+                   border-radius: 6px; font-size: .85rem; font-weight: 600; }
+.diet-field { border: 0; margin: 0; padding: 0; min-width: 0; }
+.diet-field legend { padding: 0; margin-bottom: .25rem; font-weight: 600; }
+.diet-options { display: flex; flex-wrap: wrap; gap: .5rem 1.25rem; }
+.diet-options input[type="checkbox"] { width: auto; padding: 0; margin-top: .3rem; }
+#diet-filter { align-items: center; }

@@ -770,6 +770,7 @@ async function renderProducts() {
           <strong></strong>
           <p class="meta"></p>
           <p class="meta"></p>
+          <p class="meta diet-meta" hidden></p>
         </div>
         <div class="product-actions">
           <button type="button" class="ghost edit-btn">Edit</button>
@@ -784,6 +785,11 @@ async function renderProducts() {
     }
     card.querySelectorAll(".meta")[0].textContent = p.ingredients ? `Ingredients: ${p.ingredients}` : "No ingredients listed";
     card.querySelectorAll(".meta")[1].textContent = allergens ? `Allergens: ${allergens}` : "Allergens: none listed";
+    if (p.diets?.length) {
+      const dietLine = card.querySelector(".diet-meta");
+      dietLine.textContent = `Diet: ${p.diets.map(dietLabel).join(", ")}`;
+      dietLine.hidden = false;
+    }
     card.querySelector(".edit-btn").addEventListener("click", () => startEditProduct(p));
     card.querySelector(".remove-btn").addEventListener("click", async () => {
       if (!confirm(`Remove “${p.name}”?`)) return;
@@ -854,6 +860,7 @@ function startEditProduct(product) {
   fields.price.value = product.price;
   fields.ingredients.value = product.ingredients || "";
   fields.allergens.value = Array.isArray(product.allergens) ? product.allergens.join(", ") : product.allergens || "";
+  productDiets.querySelectorAll("input").forEach((box) => (box.checked = (product.diets || []).includes(box.value)));
   productImageInput.value = "";
   productImage = product.image_url || ""; // the current photo stays unless it is changed or removed
   productPreview.src = productImage;
@@ -875,6 +882,12 @@ function resetProductForm() {
 }
 
 productCancel.addEventListener("click", resetProductForm);
+
+const productDiets = document.getElementById("product-diets");
+productDiets.innerHTML = DIETS.map(
+  ({ key, label }) => `<label class="check"><input type="checkbox" value="${key}"> ${label}</label>`
+).join("");
+const pickedDiets = () => [...productDiets.querySelectorAll("input:checked")].map((box) => box.value);
 
 async function saveProductChanges(product, changes) {
   const isLocal = !product.id || String(product.id).startsWith("local-");
@@ -902,6 +915,7 @@ productForm?.addEventListener("submit", async (e) => {
     price: Number(body.price),
     ingredients: body.ingredients || "",
     allergens,
+    diets: pickedDiets(),
     image_url: productImage || null,
   };
   if (editingProduct) {

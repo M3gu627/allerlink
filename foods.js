@@ -42,14 +42,69 @@ const ALLERGEN_ALIASES = {
   soya: "soy", soybean: "soy", tofu: "soy",
   tahini: "sesame",
 };
-const normalize = (word) => ALLERGEN_ALIASES[word.trim().toLowerCase()] ?? word.trim().toLowerCase();
-
-function conflicts(item) {
-  if (!state.customer?.allergies) return [];
-  const mine = state.customer.allergies.map(normalize);
-  const tags = Array.isArray(item.allergens) ? item.allergens : [];
-  return tags.filter((tag) => mine.includes(normalize(tag)));
+// Maps a word to its allergen group, ignoring a plural "s" ("shrimps", "peanuts").
+function normalize(word) {
+  const w = word.trim().toLowerCase();
+  return ALLERGEN_ALIASES[w] ?? ALLERGEN_ALIASES[w.replace(/s$/, "")] ?? w;
 }
+
+// Checks both the dish's allergen tags and every word in its ingredients against the customer's allergies,
+// so a dish listing "shrimp" is caught even if the business forgot to tag it.
+// Returns [{ contains, allergy }], for example [{ contains: "shrimp", allergy: "shellfish" }].
+function conflicts(item) {
+  if (!state.customer?.allergies?.length) return [];
+  const mine = state.customer.allergies.map((allergy) => ({ allergy, group: normalize(allergy) }));
+  const tags = Array.isArray(item.allergens) ? item.allergens : [];
+  const words = String(item.ingredients || "").toLowerCase().split(/[^a-zñé]+/).filter(Boolean);
+  const found = new Map();
+  for (const word of [...tags, ...words]) {
+    const hit = mine.find((m) => m.group === normalize(word));
+    if (hit && !found.has(word.toLowerCase())) found.set(word.toLowerCase(), hit.allergy);
+  }
+  return [...found].map(([contains, allergy]) => ({ contains, allergy }));
+}
+
+const warningText = (hits) =>
+  hits
+    .map(({ contains, allergy }) =>
+      contains === allergy.toLowerCase()
+        ? `Contains ${contains}, which you're allergic to.`
+        : `Contains ${contains}, and you're allergic to ${allergy}.`
+    )
+    .join(" ");
+
+// ---------- Dietary filter (remembered on this device) ----------
+let selectedDiets = [];
+try {
+  selectedDiets = JSON.parse(localStorage.getItem("allerlink_diets") || "[]").filter((key) => DIET_MATCHES[key]);
+} catch (error) {
+  selectedDiets = [];
+}
+
+const visibleDishes = (rest) => rest.products.filter((item) => dishMatchesDiets(item.diets || [], selectedDiets));
+
+function renderDietFilter() {
+  document.getElementById("diet-filter").innerHTML =
+    '<span class="note">Dietary filter:</span>' +
+    DIETS.map(
+      ({ key, label }) => `<button type="button" data-diet="${key}" aria-pressed="${selectedDiets.includes(key)}">${label}</button>`
+    ).join("");
+}
+
+document.getElementById("diet-filter").addEventListener("click", (e) => {
+  const button = e.target.closest("[data-diet]");
+  if (!button) return;
+  const key = button.dataset.diet;
+  selectedDiets = selectedDiets.includes(key) ? selectedDiets.filter((diet) => diet !== key) : [...selectedDiets, key];
+  try {
+    localStorage.setItem("allerlink_diets", JSON.stringify(selectedDiets));
+  } catch (error) {
+    // storage unavailable: the filter just will not be remembered
+  }
+  renderDietFilter();
+  if (activeRestaurantId) renderRestaurantMenu(activeRestaurantId);
+  else renderRestaurantList();
+});
 
 function logoHtml(url, name) {
   if (url) {
@@ -68,7 +123,7 @@ async function loadFoods() {
   // Partner restaurants + their products (preferred)
   const [estRes, prodRes] = await Promise.all([
     db.from("establishments").select("id, business_name, logo_url, active").eq("active", true),
-    db.from("partner_products").select("id, establishment_id, name, price, ingredients, allergens, available, image_url").eq("available", true),
+    db.from("partner_products").select("id, establishment_id, name, price, ingredients, allergens, available, image_url, diets").eq("available", true),
   ]);
 
   if (!estRes.error && !prodRes.error && (estRes.data?.length || 0) > 0) {
@@ -85,6 +140,7 @@ async function loadFoods() {
             allergens: Array.isArray(p.allergens) ? p.allergens : [],
             ingredients: p.ingredients || "",
             image: p.image_url || "",
+            diets: Array.isArray(p.diets) ? p.diets : [],
             restaurant: est.business_name || "Partner",
             logo: est.logo_url || "",
             source: "partner",
@@ -135,6 +191,7 @@ async function loadFoods() {
 
   const { data: wallet } = await db.rpc("get_wallet");
   pointsBalance = wallet?.points ?? 0;
+  renderDietFilter();
   renderRestaurantList();
   renderCart();
 }
@@ -145,15 +202,20 @@ function renderRestaurantList() {
     root.innerHTML = '<p class="note">No partner restaurants have posted products yet.</p>';
     return;
   }
+  const shown = restaurants.map((r) => ({ ...r, dishes: visibleDishes(r) })).filter((r) => r.dishes.length);
+  if (!shown.length) {
+    root.innerHTML = '<p class="note">No dishes match your dietary filter. Restaurants that have not tagged their dishes are hidden while a filter is on.</p>';
+    return;
+  }
   root.innerHTML =
     '<p class="note" style="margin-top:0">Choose a restaurant to see their menu.</p>' +
     '<div class="rest-grid">' +
-    restaurants
+    shown
       .map(
         (r) => `<button type="button" class="rest-card" data-open-rest="${esc(r.id)}">
         ${logoHtml(r.logo, r.name)}
         <span class="rest-name">${esc(r.name)}</span>
-        <span class="rest-meta">${r.products.length} dish${r.products.length === 1 ? "" : "es"}</span>
+        <span class="rest-meta">${r.dishes.length} dish${r.dishes.length === 1 ? "" : "es"}</span>
       </button>`
       )
       .join("") +
@@ -166,16 +228,20 @@ function renderRestaurantMenu(restId) {
   if (!rest) return renderRestaurantList();
   activeRestaurantId = restId;
 
-  const dishes = rest.products
+  const dishes = visibleDishes(rest)
     .map((item) => {
       const blocked = conflicts(item);
+      const warning = blocked.length
+        ? `<div class="allergy-warning">⚠ Allergy warning: ${esc(warningText(blocked))}</div>`
+        : "";
       const contains = item.allergens.length ? "Contains: " + item.allergens.join(", ") : "No listed allergens";
       const ingredients = item.ingredients ? `<br>${esc("Ingredients: " + item.ingredients)}` : "";
+      const dietLine = item.diets?.length ? `<br>Diet: ${esc(item.diets.map(dietLabel).join(", "))}` : "";
       const photo = item.image ? `<img class="dish-img" src="${esc(item.image)}" alt="${esc(item.name)}">` : "";
       return `<div class="dish ${blocked.length ? "unsafe" : ""}">
         ${photo}
         <div><b>${esc(item.name)}</b><br>
-          <small>${peso(item.price)} · ${esc(contains)}${ingredients}</small></div>
+          <small>${peso(item.price)} · ${esc(contains)}${ingredients}${dietLine}</small>${warning}</div>
         ${
           blocked.length
             ? '<span class="tag">Not safe for you</span>'
@@ -194,7 +260,7 @@ function renderRestaurantMenu(restId) {
         <p class="note" style="margin:0.25rem 0 0">Menu posted by this partner</p>
       </div>
     </div>
-    ${dishes || '<p class="note">No dishes listed.</p>'}`;
+    ${dishes || `<p class="note">${selectedDiets.length ? "No dishes here match your dietary filter." : "No dishes listed."}</p>`}`;
 }
 
 function renderCart() {

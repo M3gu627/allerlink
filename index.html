@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>AllerLink Technologies | Connecting Guests to Safer Choices</title>
+  <title>AllerLink Technologies | Connecting Customers to Safer Choices</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -190,6 +190,7 @@
     <section data-view="foods" hidden>
       <h2>AllerFoods</h2>
       <p class="note">Pick a partner restaurant to see their posted menu. Dishes are checked against your allergy profile. Confirm ingredients with staff — AllerFoods cannot guarantee an allergen-free meal.</p>
+      <div class="filters" id="diet-filter" aria-label="Dietary filter"></div>
       <div id="menu"></div>
       <div class="panel">
         <h3>Your order</h3>
@@ -361,6 +362,7 @@
         <label>Price (₱) <input name="price" type="number" min="1" step="0.01" required></label>
         <label>Ingredients <input name="ingredients" placeholder="chicken, rice, garlic, oil"></label>
         <label>Allergens (comma-separated) <input name="allergens" placeholder="gluten, dairy"></label>
+        <fieldset class="diet-field"><legend>Dietary tags (optional)</legend><div class="diet-options" id="product-diets"></div></fieldset>
         <label>Photo (optional) <input type="file" id="product-image-input" accept="image/*"></label>
         <div id="product-image-wrap" class="photo-preview" hidden>
           <img id="product-image-preview" alt="Photo preview">
@@ -510,6 +512,7 @@
   <script src="card3d.js"></script>
   <script src="allergy-picker.js"></script>
   <script src="business-documents.js"></script>
+  <script src="diets.js"></script>
   <script src="app.js"></script>
   <script src="foods.js"></script>
   <script src="employee.js"></script>
