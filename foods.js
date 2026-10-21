@@ -109,7 +109,8 @@ function logoHtml(url, name) {
 }
 
 // ---------- AllerFoods ----------
-async function loadFoods() {
+// Loads the restaurants and dishes (used by Explore Food, Home and Favorites).
+async function fetchRestaurants() {
   activeRestaurantId = null;
   restaurants = [];
   menuItems = [];
@@ -183,10 +184,63 @@ async function loadFoods() {
     restaurants = [...byRest.values()];
   }
 
+}
+
+let pendingRestaurant = null; // set when Home or Favorites opens a specific restaurant
+
+function openRestaurant(id) {
+  pendingRestaurant = id;
+  show("foods");
+}
+
+async function loadFoods() {
+  await fetchRestaurants();
   const { data: wallet } = await db.rpc("get_wallet");
   pointsBalance = wallet?.points ?? 0;
   renderRestaurantList();
   renderCart();
+  if (pendingRestaurant) {
+    renderRestaurantMenu(pendingRestaurant);
+    pendingRestaurant = null;
+  }
+}
+
+// ---------- Favorite restaurants (kept on this device, per account) ----------
+const favoritesKey = () => `allerlink_favorites_${state.customer?.id ?? "guest"}`;
+
+function getFavorites() {
+  try {
+    return JSON.parse(localStorage.getItem(favoritesKey()) || "[]");
+  } catch (error) {
+    return [];
+  }
+}
+
+const isFavorite = (id) => getFavorites().includes(String(id));
+
+// Adds or removes a favorite and returns whether the restaurant is now a favorite.
+function toggleFavorite(id) {
+  const key = String(id);
+  const list = getFavorites();
+  const next = list.includes(key) ? list.filter((item) => item !== key) : [...list, key];
+  try {
+    localStorage.setItem(favoritesKey(), JSON.stringify(next));
+  } catch (error) {
+    // storage unavailable: the favorite just will not be remembered
+  }
+  return next.includes(key);
+}
+
+function restaurantCardHtml(r, dishCount) {
+  const fav = isFavorite(r.id);
+  return `<div class="rest-item">
+    <button type="button" class="rest-card" data-open-rest="${esc(r.id)}">
+      ${logoHtml(r.logo, r.name)}
+      <span class="rest-name">${esc(r.name)}</span>
+      <span class="rest-meta">${dishCount} dish${dishCount === 1 ? "" : "es"}</span>
+    </button>
+    <button type="button" class="fav-btn" data-fav="${esc(r.id)}" aria-pressed="${fav}" aria-label="Favorite ${esc(r.name)}">${fav ? "♥" : "♡"}</button>
+  </div>`;
 }
 
 function renderRestaurantList() {
@@ -205,11 +259,7 @@ function renderRestaurantList() {
     '<div class="rest-grid">' +
     shown
       .map(
-        (r) => `<button type="button" class="rest-card" data-open-rest="${esc(r.id)}">
-        ${logoHtml(r.logo, r.name)}
-        <span class="rest-name">${esc(r.name)}</span>
-        <span class="rest-meta">${r.dishes.length} dish${r.dishes.length === 1 ? "" : "es"}</span>
-      </button>`
+        (r) => restaurantCardHtml(r, r.dishes.length)
       )
       .join("") +
     "</div>";
@@ -252,6 +302,7 @@ function renderRestaurantMenu(restId) {
         <h3 style="margin:0;color:var(--navy)">${esc(rest.name)}</h3>
         <p class="note" style="margin:0.25rem 0 0">Menu posted by this partner</p>
       </div>
+      <button type="button" class="fav-btn fav-inline" data-fav="${esc(rest.id)}" aria-pressed="${isFavorite(rest.id)}" aria-label="Favorite ${esc(rest.name)}">${isFavorite(rest.id) ? "♥" : "♡"}</button>
     </div>
     ${dishes || `<p class="note">${selectedDiets.length ? "No dishes here match your dietary filter." : "No dishes listed."}</p>`}`;
 }
@@ -286,6 +337,13 @@ function renderCart() {
 }
 
 document.getElementById("menu").addEventListener("click", (e) => {
+  const fav = e.target.closest("[data-fav]");
+  if (fav) {
+    const on = toggleFavorite(fav.dataset.fav);
+    fav.setAttribute("aria-pressed", on);
+    fav.textContent = on ? "♥" : "♡";
+    return;
+  }
   const open = e.target.closest("[data-open-rest]");
   if (open) {
     renderRestaurantMenu(open.getAttribute("data-open-rest"));

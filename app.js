@@ -34,12 +34,12 @@ document.getElementById("menu-backdrop").addEventListener("click", () => setMenu
 document.addEventListener("keydown", (e) => e.key === "Escape" && setMenu(false));
 // Pages that show the dashboard side menu, per account type.
 const sideNavViews = {
-  customer: ["card", "foods", "wallet", "delivery", "done"],
+  customer: ["customer-home", "foods", "orders", "allergy", "favorites", "wallet", "card", "account", "settings", "delivery", "done"],
   establishment: ["partner-home", "partner-products", "partner-sales", "dashboard"],
   employee: ["employee-home", "employee-users", "employee-businesses", "employee-confirmations"],
 };
-const roleHome = { customer: "card", establishment: "dashboard", employee: "employee-home" };
-const customerViews = ["card", "foods", "wallet"]; // need a signed-in customer
+const roleHome = { customer: "customer-home", establishment: "dashboard", employee: "employee-home" };
+const customerViews = ["customer-home", "foods", "orders", "allergy", "favorites", "wallet", "card", "account", "settings"]; // need a signed-in customer
 
 function show(view, { isBack = false, reset = false } = {}) {
   if (view === "home" && state.role) view = roleHome[state.role]; // signed-in users stay in their dashboard
@@ -51,11 +51,11 @@ function show(view, { isBack = false, reset = false } = {}) {
   if (view === "home" || reset) viewHistory.length = 0; // Home, sign out, and landing pages start a fresh trail
   currentView = view;
   document.querySelectorAll("[data-view]").forEach((s) => (s.hidden = s.dataset.view !== view));
-  if (view === "card") {
-    fillEditForm();
-    render2dCard(state.customer);
-    loadHistory();
-  }
+  if (view === "customer-home") loadCustomerHome();
+  if (view === "orders") loadHistory();
+  if (view === "allergy" || view === "account") fillEditForm();
+  if (view === "favorites") renderFavoritesPage();
+  if (view === "card") render2dCard(state.customer);
   if (view === "foods") loadFoods();
   if (view === "wallet") loadWallet();
   if (view === "partner-home") fillPartnerProfile();
@@ -198,7 +198,8 @@ document.getElementById("btn-download").addEventListener("click", async () => {
   link.click();
 });
 
-const editForm = document.getElementById("form-edit");
+const editForm = document.getElementById("form-edit"); // My Account
+const allergyForm = document.getElementById("form-allergy"); // My Allergy Profile
 const editAllergies = createAllergyPicker(document.getElementById("edit-allergies"));
 editForm.birthday.addEventListener("change", () => (editForm.age.value = ageFrom(editForm.birthday.value)));
 
@@ -248,7 +249,7 @@ function fillEditForm() {
   editForm.valid_until.value = fmt(valid);
 
   editAllergies.set(profile.allergies || []);
-  editForm.emergency_notes.value = profile.emergency_notes ?? "";
+  allergyForm.emergency_notes.value = profile.emergency_notes ?? "";
 
   // Avatar
   const preview = document.getElementById("avatar-preview");
@@ -264,21 +265,29 @@ function fillEditForm() {
   }
 }
 
-editForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const data = formData(editForm);
-  // Ignore locked / display-only fields
-  const { age, membership_no, issue_date, valid_until, allergies, ...rest } = data;
-  if (!allergies) return alert("Please choose at least one allergy.");
-  const changes = { ...rest, allergies: parseAllergies(allergies) };
-  // Keep any locally chosen avatar
-  if (state.customer?.avatar_url) changes.avatar_url = state.customer.avatar_url;
+async function saveCustomerChanges(changes) {
   const { error } = await db.from("profiles").update(changes).eq("id", state.customer.id);
   if (error) return alert(error.message);
   state.customer = { ...state.customer, ...changes };
   renderCard(state.customer);
   render2dCard(state.customer);
   alert("Your information was updated.");
+}
+
+// My Account: name, gender, birthday and photo
+editForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const { age, membership_no, issue_date, valid_until, ...changes } = formData(editForm); // locked fields are ignored
+  if (state.customer?.avatar_url) changes.avatar_url = state.customer.avatar_url; // keep a locally chosen photo
+  await saveCustomerChanges(changes);
+});
+
+// My Allergy Profile: allergies and emergency notes
+allergyForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const { allergies, emergency_notes } = formData(allergyForm);
+  if (!allergies) return alert("Please choose at least one allergy.");
+  await saveCustomerChanges({ allergies: parseAllergies(allergies), emergency_notes });
 });
 
 document.getElementById("form-delivery").addEventListener("submit", async (e) => {

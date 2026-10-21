@@ -32,9 +32,15 @@
     <aside id="sidenav" aria-label="Dashboard menu" hidden>
       <button type="button" id="btn-menu-close" class="menu-close" aria-label="Close menu">×</button>
       <div data-role="customer">
+        <button data-go="customer-home"><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg> Home</button>
+        <button data-go="foods"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg> Explore Food</button>
+        <button data-go="orders"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg> My Orders</button>
+        <button data-go="allergy"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg> My Allergy Profile</button>
+        <button data-go="favorites"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg> Favorites</button>
+        <button data-go="wallet"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg> Wallet &amp; Rewards</button>
         <button data-go="card"><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="20" height="14" x="2" y="5" rx="2"/><path d="M2 10h20"/></svg> My AllerCard</button>
-        <button data-go="foods"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg> AllerFoods</button>
-        <button data-go="wallet"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"/><path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"/></svg> Wallet</button>
+        <button data-go="account"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> My Account</button>
+        <button data-go="settings"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg> Settings &amp; Privacy</button>
       </div>
       <div data-role="employee">
         <button data-go="employee-home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Profile</button>
@@ -129,43 +135,55 @@
       </form>
     </section>
 
+    <section data-view="customer-home" hidden>
+      <h2 id="home-welcome">Welcome back!</h2>
+      <p class="note">Here is what is happening with your AllerFoods account today.</p>
+
+      <h3>Order summary</h3>
+      <div class="stats" id="home-summary"></div>
+      <p><a href="#" data-go="orders">View all orders</a></p>
+
+      <h3>Recommended for you today</h3>
+      <div class="reco-grid" id="home-reco"></div>
+
+      <h3>Your favorite restaurants</h3>
+      <div class="rest-grid" id="home-favorites"></div>
+
+      <h3>Promos</h3>
+      <div class="promo-grid" id="home-promos"></div>
+
+      <h3>Events</h3>
+      <ul class="event-list" id="home-events"></ul>
+
+      <h3>Sponsored</h3>
+      <div class="promo-grid" id="home-ads"></div>
+    </section>
+
+    <section data-view="orders" hidden>
+      <h2>My Orders</h2>
+      <div class="panel"><ul id="history"></ul></div>
+    </section>
+
+    <section data-view="allergy" hidden>
+      <h2>My Allergy Profile</h2>
+      <p class="note">AllerFoods checks every dish against these allergies and warns you before you order.</p>
+      <form class="panel" id="form-allergy">
+        <fieldset class="allergy-field"><legend>Food allergies</legend><div id="edit-allergies"></div></fieldset>
+        <label>Emergency notes (optional) <textarea name="emergency_notes" rows="3"></textarea></label>
+        <button class="primary">Save changes</button>
+      </form>
+    </section>
+
+    <section data-view="favorites" hidden>
+      <h2>Favorites</h2>
+      <p class="note">Restaurants you saved. Tap the heart on a restaurant in Explore Food to add one.</p>
+      <div class="rest-grid" id="favorites-list"></div>
+    </section>
+
     <section data-view="card" hidden>
       <h2>My AllerCard</h2>
 
       <div class="card-layout">
-        <!-- Left: My information -->
-        <div class="card-info">
-          <h3>My information</h3>
-          <form class="panel" id="form-edit">
-            <div class="avatar-wrap">
-              <img id="avatar-preview" src="" alt="Profile picture" class="avatar" hidden>
-              <div id="avatar-placeholder" class="avatar avatar-placeholder">?</div>
-              <label class="avatar-btn">
-                Change photo
-                <input type="file" id="avatar-input" accept="image/*" hidden>
-              </label>
-            </div>
-
-            <label>Membership No. <input name="membership_no" readonly class="locked"></label>
-            <label>Name or display name <input name="display_name" required></label>
-            <label>Gender
-              <select name="gender">
-                <option value="">Select…</option>
-                <option value="male">Male</option>
-                <option value="female">Female</option>
-              </select>
-            </label>
-            <label>Birthday <input name="birthday" type="date" required></label>
-            <label>Age <input name="age" readonly class="locked"></label>
-            <label>Issue date <input name="issue_date" readonly class="locked"></label>
-            <label>Valid until <input name="valid_until" readonly class="locked"></label>
-            <fieldset class="allergy-field"><legend>Food allergies</legend><div id="edit-allergies"></div></fieldset>
-            <label>Emergency notes (optional) <textarea name="emergency_notes" rows="2"></textarea></label>
-            <button class="primary">Save changes</button>
-          </form>
-        </div>
-
-        <!-- Right: Membership card -->
         <div class="card-visual">
           <div id="card3d" aria-label="3D AllerCard. Drag to rotate."></div>
           <p class="note">Drag to rotate. Use Enlarge to view full screen.</p>
@@ -181,14 +199,56 @@
           <p class="note">AllerPass package: ₱199 per 3 months. Includes your AllerCard, profile updates anytime, and access at every participating establishment.</p>
         </div>
       </div>
+    </section>
 
-      <h3>Order history</h3>
-      <div class="panel"><ul id="history"></ul></div>
+    <section data-view="account" hidden>
+      <h2>My Account</h2>
+      <form class="panel account-form" id="form-edit">
+        <div class="avatar-wrap">
+          <img id="avatar-preview" src="" alt="Profile picture" class="avatar" hidden>
+          <div id="avatar-placeholder" class="avatar avatar-placeholder">?</div>
+          <label class="avatar-btn">
+            Change photo
+            <input type="file" id="avatar-input" accept="image/*" hidden>
+          </label>
+        </div>
+
+        <label>Membership No. <input name="membership_no" readonly class="locked"></label>
+        <label>Name or display name <input name="display_name" required></label>
+        <label>Gender
+          <select name="gender">
+            <option value="">Select…</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+          </select>
+        </label>
+        <label>Birthday <input name="birthday" type="date" required></label>
+        <label>Age <input name="age" readonly class="locked"></label>
+        <label>Issue date <input name="issue_date" readonly class="locked"></label>
+        <label>Valid until <input name="valid_until" readonly class="locked"></label>
+        <button class="primary">Save changes</button>
+      </form>
+    </section>
+
+    <section data-view="settings" hidden>
+      <h2>Settings &amp; Privacy</h2>
+      <form class="panel account-form" id="form-password">
+        <h3>Change password</h3>
+        <label>New password <input name="password" type="password" minlength="8" required autocomplete="new-password"></label>
+        <label>Confirm new password <input name="confirm" type="password" minlength="8" required autocomplete="new-password"></label>
+        <button class="primary">Update password</button>
+      </form>
+      <div class="panel account-form">
+        <h3>Your privacy</h3>
+        <p>Your allergy information is shown only to authorized staff at participating establishments after they scan your AllerCard. Your allergy details are not stored in the QR code.</p>
+        <p>You can ask to see, correct or delete your information at any time. Email <a href="mailto:allerlinktech.customerservice@gmail.com">allerlinktech.customerservice@gmail.com</a>.</p>
+        <p class="notice"><b>Important Food Safety Notice:</b> AllerFoods and AllerCard help communicate food allergy information but cannot guarantee that food is allergen-free or prevent all risks of cross-contact.</p>
+      </div>
     </section>
 
 
     <section data-view="foods" hidden>
-      <h2>AllerFoods</h2>
+      <h2>Explore Food</h2>
       <p class="note">Pick a partner restaurant to see their posted menu. Dishes are checked against your allergy profile. Confirm ingredients with staff — AllerFoods cannot guarantee an allergen-free meal.</p>
       <div id="diet-filter"></div>
       <div id="menu"></div>
@@ -215,12 +275,12 @@
     </section>
 
     <section data-view="wallet" hidden>
-      <h2>Wallet</h2>
+      <h2>Wallet &amp; Rewards</h2>
       <div class="stats">
         <div class="stat"><small>Cash balance</small><b id="w-cash">₱0.00</b></div>
         <div class="stat"><small>Points</small><b id="w-points">0</b></div>
       </div>
-      <p class="note">You earn 1 point for every ₱10 you spend on AllerFoods.</p>
+      <p class="note">You earn 1 point for every food order. Use your points at checkout: 1 point = ₱1 off.</p>
       <form class="panel" id="form-topup">
         <h3>Add cash</h3>
         <label>Amount (₱) <input name="amount" type="number" min="50" max="10000" step="50" required></label>
@@ -274,7 +334,7 @@
     <section data-view="done" hidden>
       <h2>Order received</h2>
       <p>We sent a confirmation to your email. We will confirm your delivery date once your card is ready.</p>
-      <div class="actions"><button class="primary" data-go="card">Back to dashboard</button></div>
+      <div class="actions"><button class="primary" data-go="customer-home">Back to dashboard</button></div>
     </section>
 
     <!-- 2. FOOD ESTABLISHMENT FLOW -->
@@ -515,6 +575,8 @@
   <script src="diets.js"></script>
   <script src="app.js"></script>
   <script src="foods.js"></script>
+  <script src="promos.js"></script>
+  <script src="customer-home.js"></script>
   <script src="employee.js"></script>
   <script src="card-zoom.js"></script>
 </body>
