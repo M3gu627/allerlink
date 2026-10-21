@@ -77,27 +77,38 @@ function isPromoLive(promo) {
 }
 
 async function renderPromotions() {
-  const { data } = await db.from("promotions").select("*").order("created_at", { ascending: false });
+  const { data } = await db
+    .from("promotions")
+    .select("*, establishments(business_name), partner_products(name, price, image_url)")
+    .order("created_at", { ascending: false });
   const live = (data ?? []).filter(isPromoLive);
-  const picture = (promo, cls) => (promo.image_url ? `<img class="${cls}" src="${esc(promo.image_url)}" alt="">` : "");
-  const link = (promo) => {
-    const href = safeLink(promo.link_url);
-    return href ? `<a href="${esc(href)}" target="_blank" rel="noopener">Learn more</a>` : "";
+
+  // A promo posted by a restaurant shows its name, the featured dish and a button to its menu.
+  const picture = (p, cls) => {
+    const src = p.image_url || p.partner_products?.image_url;
+    return src ? `<img class="${cls}" src="${esc(src)}" alt="">` : "";
   };
-  const dates = (promo) => (promoDates(promo) ? `<small>${esc(promoDates(promo))}</small>` : "");
+  const dish = (p) => (p.partner_products ? `<small>Featured: ${esc(p.partner_products.name)} · ${peso(p.partner_products.price)}</small>` : "");
+  const dates = (p) => (promoDates(p) ? `<small>${esc(promoDates(p))}</small>` : "");
+  const actions = (p) => {
+    const href = safeLink(p.link_url);
+    const learn = href ? `<a href="${esc(href)}" target="_blank" rel="noopener">Learn more</a>` : "";
+    const menu = p.establishment_id ? `<button class="ghost" data-open-rest="${esc(p.establishment_id)}">View menu</button>` : "";
+    return learn + menu;
+  };
 
   const promos = live.filter((p) => p.kind === "promo");
   const events = live.filter((p) => p.kind === "event").sort((a, b) => (a.starts_on || "9").localeCompare(b.starts_on || "9"));
   const ads = live.filter((p) => p.kind === "ad");
 
   el("home-promos").innerHTML = promos
-    .map((p) => `<article class="panel promo-card">${picture(p, "promo-img")}<span class="chip">Promo</span><b>${esc(p.title)}</b><small>${esc(p.details)}</small>${dates(p)}${link(p)}</article>`)
+    .map((p) => `<article class="panel promo-card">${picture(p, "promo-img")}<span class="chip">${esc(p.establishments?.business_name ?? "Promo")}</span><b>${esc(p.title)}</b><small>${esc(p.details)}</small>${dish(p)}${dates(p)}${actions(p)}</article>`)
     .join("");
   el("home-events").innerHTML = events
-    .map((p) => `<li class="panel">${picture(p, "promo-img")}${dates(p)}<b>${esc(p.title)}</b><span>${esc(p.details)}</span>${link(p)}</li>`)
+    .map((p) => `<li class="panel">${picture(p, "promo-img")}${dates(p)}${p.establishments ? `<small>${esc(p.establishments.business_name)}</small>` : ""}<b>${esc(p.title)}</b><span>${esc(p.details)}</span>${dish(p)}${actions(p)}</li>`)
     .join("");
   el("home-ads").innerHTML = ads
-    .map((p) => `<article class="panel ad-card"><span class="ad-label">Ad</span>${picture(p, "promo-img")}<b>${esc(p.title)}</b><small>${esc(p.details)}</small>${link(p)}</article>`)
+    .map((p) => `<article class="panel ad-card"><span class="ad-label">Ad</span>${picture(p, "promo-img")}<b>${esc(p.title)}</b><small>${esc(p.details)}</small>${actions(p)}</article>`)
     .join("");
 
   el("home-promos-block").hidden = !promos.length;
@@ -136,6 +147,8 @@ function wireRestaurantClicks(container, rerender) {
 wireRestaurantClicks(el("home-favorites"), () => renderFavoriteGrid(el("home-favorites")));
 wireRestaurantClicks(el("favorites-list"), () => renderFavoriteGrid(el("favorites-list")));
 wireRestaurantClicks(el("home-reco"), () => {});
+wireRestaurantClicks(el("home-promos"), () => {});
+wireRestaurantClicks(el("home-events"), () => {});
 
 // ---------- Settings: change password ----------
 el("form-password").addEventListener("submit", async (e) => {

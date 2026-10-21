@@ -35,7 +35,7 @@ document.addEventListener("keydown", (e) => e.key === "Escape" && setMenu(false)
 // Pages that show the dashboard side menu, per account type.
 const sideNavViews = {
   customer: ["customer-home", "foods", "orders", "allergy", "favorites", "wallet", "card", "account", "settings", "delivery", "done"],
-  establishment: ["partner-home", "partner-products", "partner-sales", "dashboard"],
+  establishment: ["partner-home", "partner-products", "partner-promos", "partner-sales", "dashboard"],
   employee: ["employee-home", "employee-users", "employee-businesses", "employee-confirmations", "employee-promos"],
 };
 const roleHome = { customer: "customer-home", establishment: "dashboard", employee: "employee-home" };
@@ -66,6 +66,7 @@ function show(view, { isBack = false, reset = false } = {}) {
   if (view === "employee-businesses") loadEmployeeBusinesses();
   if (view === "employee-confirmations") loadEmployeeConfirmations();
   if (view === "employee-promos") loadEmployeePromos();
+  if (view === "partner-promos") loadPartnerPromos();
 
   const showSide = Boolean(sideNavViews[state.role]?.includes(view));
   layout.classList.toggle("with-side", showSide);

@@ -408,3 +408,4 @@ button.ghost { background: #fff; color: var(--navy); border: 2px solid var(--nav
 .promo-thumb { width: 120px; height: 80px; object-fit: cover; border-radius: 8px; flex: none; }
 .promo-preview { width: 200px; height: 120px; }
 .promo-card a, .ad-card a, .event-list a { justify-self: start; }
+.promo-card button, .event-list button { justify-self: start; }

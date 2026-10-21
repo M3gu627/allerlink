@@ -52,6 +52,7 @@
       <div data-role="establishment">
         <button data-go="partner-home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> Profile</button>
         <button data-go="partner-products"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg> Products</button>
+        <button data-go="partner-promos"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg> Promotions</button>
         <button data-go="partner-sales"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3v18h18"/><path d="M7 16V9"/><path d="M12 16v-5"/><path d="M17 16V5"/></svg> Sales</button>
         <button data-go="dashboard"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 12h10"/></svg> Scan AllerCard</button>
       </div>
@@ -539,31 +540,14 @@
 
     <section data-view="employee-promos" hidden>
       <h2>Promotions</h2>
-      <p class="note">Promos, events and ads you add here appear on every customer's Home page.</p>
-      <form class="panel account-form" id="form-promo">
-        <h3 id="promo-form-heading">Add promotion</h3>
-        <label>Type
-          <select name="kind">
-            <option value="promo">Promo</option>
-            <option value="event">Event</option>
-            <option value="ad">Ad (sponsored)</option>
-          </select>
-        </label>
-        <label>Title <input name="title" required maxlength="80"></label>
-        <label>Details <textarea name="details" rows="4" required maxlength="600" placeholder="What is it, who is it for, how to join or claim it"></textarea></label>
-        <label>Start or event date (optional) <input name="starts_on" type="date"></label>
-        <label>End date (optional, it hides itself after this day) <input name="ends_on" type="date"></label>
-        <label>Link (optional) <input name="link_url" type="url" placeholder="https://"></label>
-        <label>Picture (optional) <input type="file" id="promo-image-input" accept="image/*"></label>
-        <div id="promo-image-wrap" class="photo-preview promo-preview" hidden>
-          <img id="promo-image-preview" alt="Picture preview">
-          <button type="button" id="promo-image-remove" aria-label="Remove picture">×</button>
-        </div>
-        <label class="check"><input type="checkbox" name="active" checked> Show on customer Home</label>
-        <button class="primary" type="submit" id="promo-submit">Add promotion</button>
-        <button class="ghost" type="button" id="promo-cancel" hidden>Cancel</button>
-      </form>
-      <div class="list-stack" id="promo-list"></div>
+      <p class="note">Promos, events and ads you add here appear on every customer's Home page. You can also hide or delete promotions posted by businesses.</p>
+      <div id="employee-promos-root"></div>
+    </section>
+
+    <section data-view="partner-promos" hidden>
+      <h2>Promotions</h2>
+      <p class="note">Post a promo or event for your restaurant. It appears on every customer's Home page with a button to your menu. Link one of your dishes to feature it.</p>
+      <div id="partner-promos-root"></div>
     </section>
 
     <section data-view="dashboard" hidden>
@@ -613,7 +597,7 @@
   <script src="foods.js"></script>
   <script src="customer-home.js"></script>
   <script src="employee.js"></script>
-  <script src="employee-promos.js"></script>
+  <script src="promo-manager.js"></script>
   <script src="card-zoom.js"></script>
 </body>
 </html>
