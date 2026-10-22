@@ -41,6 +41,27 @@ const sideNavViews = {
 const roleHome = { customer: "customer-home", establishment: "dashboard", employee: "employee-home" };
 const customerViews = ["customer-home", "foods", "orders", "allergy", "favorites", "wallet", "card", "account", "settings"]; // need a signed-in customer
 
+// What to load when a page opens. Arrow functions, so a script that failed to load only breaks its own page.
+const pageLoaders = {
+  "customer-home": () => loadCustomerHome(),
+  orders: () => loadHistory(),
+  allergy: () => fillEditForm(),
+  account: () => fillEditForm(),
+  favorites: () => renderFavoritesPage(),
+  card: () => render2dCard(state.customer),
+  foods: () => loadFoods(),
+  wallet: () => loadWallet(),
+  "partner-home": () => fillPartnerProfile(),
+  "partner-products": () => renderProducts(),
+  "partner-promos": () => loadPartnerPromos(),
+  "partner-sales": () => renderPartnerSales(),
+  "employee-home": () => fillEmployeeProfile(),
+  "employee-users": () => loadEmployeeUsers(),
+  "employee-businesses": () => loadEmployeeBusinesses(),
+  "employee-confirmations": () => loadEmployeeConfirmations(),
+  "employee-promos": () => loadEmployeePromos(),
+};
+
 function show(view, { isBack = false, reset = false } = {}) {
   if (view === "home" && state.role) view = roleHome[state.role]; // signed-in users stay in their dashboard
   if (customerViews.includes(view) && !state.customer) {
@@ -51,22 +72,6 @@ function show(view, { isBack = false, reset = false } = {}) {
   if (view === "home" || reset) viewHistory.length = 0; // Home, sign out, and landing pages start a fresh trail
   currentView = view;
   document.querySelectorAll("[data-view]").forEach((s) => (s.hidden = s.dataset.view !== view));
-  if (view === "customer-home") loadCustomerHome();
-  if (view === "orders") loadHistory();
-  if (view === "allergy" || view === "account") fillEditForm();
-  if (view === "favorites") renderFavoritesPage();
-  if (view === "card") render2dCard(state.customer);
-  if (view === "foods") loadFoods();
-  if (view === "wallet") loadWallet();
-  if (view === "partner-home") fillPartnerProfile();
-  if (view === "partner-products") renderProducts();
-  if (view === "partner-sales") renderPartnerSales();
-  if (view === "employee-home") fillEmployeeProfile();
-  if (view === "employee-users") loadEmployeeUsers();
-  if (view === "employee-businesses") loadEmployeeBusinesses();
-  if (view === "employee-confirmations") loadEmployeeConfirmations();
-  if (view === "employee-promos") loadEmployeePromos();
-  if (view === "partner-promos") loadPartnerPromos();
 
   const showSide = Boolean(sideNavViews[state.role]?.includes(view));
   layout.classList.toggle("with-side", showSide);
@@ -78,6 +83,12 @@ function show(view, { isBack = false, reset = false } = {}) {
     if (item.dataset.go === view) item.setAttribute("aria-current", "page");
     else item.removeAttribute("aria-current");
   });
+
+  try {
+    Promise.resolve(pageLoaders[view]?.()).catch((error) => console.error(`Could not load "${view}":`, error));
+  } catch (error) {
+    console.error(`Could not load "${view}":`, error); // the menu and highlight above are already updated
+  }
 
   backButton.hidden = viewHistory.length === 0 || showSide; // the side menu replaces Back
   if (view === "card") card3d.open(); // after the layout is set, so the viewer has a size
@@ -685,6 +696,7 @@ function fillPartnerProfile() {
   form.notes.value = est.notes || "";
   setBizAvatar(est.logo_url, est.business_name);
   document.getElementById("partner-status").textContent = est.active ? "Active" : "Pending";
+  document.getElementById("partner-plan").textContent = planLabel(est.plan);
   document.getElementById("partner-scan-count").textContent =
     document.getElementById("stat-total")?.textContent || "0";
 }

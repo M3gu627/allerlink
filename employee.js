@@ -5,6 +5,11 @@ const byId = (id) => document.getElementById(id);
 const fmtDate = (value) => (value ? new Date(value).toLocaleDateString() : "—");
 const isLive = (row) => row.status === "active" && row.active !== false; // users have no "active" column
 const statusBadge = (row) => `<span class="badge ${isLive(row) ? "ok" : "off"}">${isLive(row) ? "Active" : "Inactive"}</span>`;
+// Plans live in applications and establishments; this function returns them for the employee screens.
+async function fetchPlans() {
+  const { data } = await db.rpc("employee_plans");
+  return data ?? { applications: {}, businesses: {} };
+}
 const detailItem = (label, value) => `<div><small>${label}</small><b>${esc(value ?? "—")}</b></div>`;
 
 // ---------- Profile ----------
@@ -159,7 +164,8 @@ async function loadEmployeeBusinesses() {
   if (!db) return;
   const { data, error } = await db.rpc("employee_businesses");
   if (error) return alert(error.message);
-  employeeBusinesses = data;
+  const plans = await fetchPlans();
+  employeeBusinesses = data.map((b) => ({ ...b, plan: plans.businesses[b.id] }));
   byId("eb-detail").hidden = true;
   renderEmployeeBusinesses();
 }
@@ -194,6 +200,7 @@ function showBusinessDetail(b) {
     `<h3>${esc(b.business_name)}</h3>
      <div class="detail-grid">
        ${detailItem("Type", b.business_type)}
+       ${detailItem("Plan", planLabel(b.plan))}
        ${detailItem("Address", b.address)}
        ${detailItem("Contact person", b.contact_person)}
        ${detailItem("Email", b.email)}
@@ -219,7 +226,8 @@ async function loadEmployeeConfirmations() {
   if (!db) return;
   const { data, error } = await db.rpc("employee_applications");
   if (error) return alert(error.message);
-  employeeApplications = data;
+  const plans = await fetchPlans();
+  employeeApplications = data.map((a) => ({ ...a, plan: plans.applications[a.id] }));
   renderApplications();
 }
 
@@ -250,6 +258,7 @@ function renderApplications() {
             <div><b>${esc(a.business_name)}</b><p class="meta">${esc(a.business_type || "—")} · applied ${fmtDate(a.created_at)}</p></div>
           </div>
           <p class="meta">${esc(a.address || "—")}</p>
+          <p class="meta">Plan: ${esc(planLabel(a.plan))}</p>
           <p class="meta">${esc(a.contact_person || "—")} · ${esc(a.email || "—")} · ${esc(a.phone || "—")}</p>
           <button class="link" data-act="docs" data-id="${a.id}">View documents</button>
           <div id="docs-${a.id}"></div>

@@ -409,3 +409,45 @@ button.ghost { background: #fff; color: var(--navy); border: 2px solid var(--nav
 .promo-preview { width: 200px; height: 120px; }
 .promo-card a, .ad-card a, .event-list a { justify-self: start; }
 .promo-card button, .event-list button { justify-self: start; }
+
+/* Post composer and feed (Promotions pages) */
+.composer { gap: .75rem; }
+.post-author { display: flex; align-items: center; gap: .7rem; }
+.post-author small { display: block; color: #5a6b7a; }
+.post-avatar { flex: none; display: grid; place-items: center; width: 44px; height: 44px; overflow: hidden;
+               border-radius: 50%; background: var(--blue-light); color: var(--navy); font-weight: 700; }
+.post-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.composer textarea { resize: vertical; }
+.post-preview { width: 100%; max-width: 420px; height: auto; }
+.post-preview img { height: auto; max-height: 320px; }
+.composer-tools { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; }
+.tool-btn { display: inline-flex; align-items: center; gap: .45rem; padding: .45rem .9rem; border: 1px solid var(--line);
+            border-radius: 999px; background: #fff; color: var(--navy); font-weight: 600; cursor: pointer; }
+.tool-btn:hover { border-color: var(--blue); }
+.tool-btn svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.composer-more summary { cursor: pointer; font-weight: 600; color: var(--navy); }
+.composer-more-body { display: grid; gap: .8rem; margin-top: .75rem; }
+.composer-actions { display: flex; justify-content: flex-end; gap: .6rem; }
+.post-card { gap: .5rem; }
+.post-card h4 { margin: .25rem 0 0; color: var(--navy); }
+.post-card p { margin: 0; white-space: pre-line; }
+.post-img { width: 100%; max-height: 360px; object-fit: cover; border-radius: 10px; }
+.post-actions { display: flex; gap: 1rem; padding-top: .4rem; border-top: 1px solid var(--line); }
+
+/* Plans and pricing */
+.plan-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
+.plan-card { align-content: start; margin-bottom: 0; }
+.plan-card h4 { margin: 0; color: var(--navy); font-size: 1.2rem; }
+.plan-price { margin: 0; }
+.plan-price b { font-size: 2rem; color: var(--navy); }
+.plan-card button { align-self: end; }
+.plan-field { border: 0; margin: 0; padding: 0; min-width: 0; }
+.plan-field legend { padding: 0; font-weight: 600; font-size: 1.1rem; color: var(--navy); }
+#plan-options { display: grid; gap: .6rem; margin-top: .4rem; }
+.plan-option { display: flex; gap: .7rem; align-items: start; padding: .75rem 1rem; border: 1px solid var(--line);
+               border-radius: 10px; background: #fff; font-weight: 400; cursor: pointer; }
+.plan-option:has(input:checked) { border-color: var(--blue); background: #f3f7fe; }
+.plan-option input { width: auto; padding: 0; margin-top: .3rem; }
+.plan-option small { display: block; color: #5a6b7a; }
+.plan-summary { display: block; }
+#employee-promos-root, #partner-promos-root { max-width: 640px; }

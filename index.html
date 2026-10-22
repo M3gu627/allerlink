@@ -14,6 +14,7 @@
     <a href="#" data-go="home" class="brand"><img src="logo.png" alt="AllerLink Technologies"></a>
     <nav>
       <button data-go="home">Home</button>
+      <button data-go="pricing">Plans</button>
       <div class="dropdown" id="login-menu">
         <button type="button" class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">Log in / Sign up ▾</button>
         <ul class="dropdown-menu" hidden>
@@ -89,6 +90,7 @@
       <div class="actions">
         <button class="primary" data-go="login" data-kind="customer">Customer</button>
         <button class="ghost" data-go="partner">Partner With Us</button>
+        <button class="ghost" data-go="pricing">Plans &amp; pricing</button>
       </div>
       <p class="note">AllerCard is an information and communication tool. It does not diagnose allergies or guarantee an allergen-free meal.</p>
     </section>
@@ -204,7 +206,7 @@
             <button class="ghost" id="btn-download">Download card</button>
             <button class="primary" data-go="delivery">Order physical AllerCard</button>
           </div>
-          <p class="note">AllerPass package: ₱199 per 3 months. Includes your AllerCard, profile updates anytime, and access at every participating establishment.</p>
+          <p class="note">AllerCard: <b data-plan-price="allercard"></b>. A physical QR card to store and share your allergy profile with participating food establishments.</p>
         </div>
       </div>
     </section>
@@ -319,6 +321,7 @@
 
     <section data-view="delivery" hidden>
       <h2>Delivery information</h2>
+      <p class="note">AllerCard: <b data-plan-price="allercard"></b></p>
       <form id="form-delivery">
         <label>Contact number <input name="phone" type="tel" required></label>
         <label>House/building number and street <input name="street" required></label>
@@ -346,9 +349,19 @@
     </section>
 
     <!-- 2. FOOD ESTABLISHMENT FLOW -->
+    <section data-view="pricing" hidden>
+      <h2>Plans &amp; pricing</h2>
+      <p class="lead">Simple pricing for diners and for food businesses.</p>
+      <h3>For diners</h3>
+      <div class="plan-grid" id="pricing-diners"></div>
+      <h3>For food businesses</h3>
+      <p class="note">Monthly subscriptions, billed after your application is approved.</p>
+      <div class="plan-grid" id="pricing-business"></div>
+    </section>
+
     <section data-view="partner" hidden>
       <h2>Partner with AllerLink</h2>
-      <p>Membership: <b>₱399 per month</b>, billed after your application is approved.</p>
+      <p>Choose a plan below. Billing starts after your application is approved. <a href="#" data-go="pricing">Compare plans</a></p>
       <form id="form-partner">
         <label>Business name <input name="business_name" required></label>
         <label>Business type
@@ -360,6 +373,10 @@
         <label>Business email (this is your login) <input name="email" type="email" required></label>
         <label>Password <input name="password" type="password" minlength="8" required></label>
         <label>Phone number <input name="phone" type="tel" required></label>
+        <fieldset class="plan-field">
+          <legend>Choose your plan</legend>
+          <div id="plan-options"></div>
+        </fieldset>
         <fieldset class="doc-group">
           <legend>Proof of registered business</legend>
           <p class="note">Upload a clear photo or scan of each document. PDF or image (JPG, PNG, ...), up to 2 MB each. Only the AllerLink team reviewing your application can see them.</p>
@@ -390,6 +407,7 @@
     <section data-view="partner-home" hidden>
       <h2>Business profile</h2>
       <p class="note">Your restaurant or café account on AllerLink. Guests never see this page.</p>
+      <p class="panel plan-summary">Your plan: <b id="partner-plan">—</b> <a href="#" data-go="pricing">Compare plans</a></p>
       <form class="panel" id="form-partner-profile">
         <div class="avatar-wrap">
           <img id="biz-avatar-preview" src="" alt="Business logo" class="avatar" hidden>
@@ -592,6 +610,7 @@
   <script src="card3d.js"></script>
   <script src="allergy-picker.js"></script>
   <script src="business-documents.js"></script>
+  <script src="plans.js"></script>
   <script src="diets.js"></script>
   <script src="app.js"></script>
   <script src="foods.js"></script>
