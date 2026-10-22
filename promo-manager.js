@@ -10,6 +10,7 @@ const PROMO_KINDS = { promo: "Promo", event: "Event", ad: "Ad (sponsored)" };
 function createPromoManager(root, { partner }) {
   const kinds = partner ? ["promo", "event"] : ["promo", "event", "ad"];
   root.innerHTML = `
+    ${partner ? '<p class="note" data-usage></p>' : ""}
     <form class="panel composer" data-form>
       <div class="post-author">
         <span class="post-avatar" data-avatar>A</span>
@@ -149,6 +150,11 @@ function createPromoManager(root, { partner }) {
       image_url: imageUrl || null,
     };
     if (partner) row.product_id = fields.product_id.value || null;
+    if (partner && row.active) {
+      const limit = currentPlan().limits.posts;
+      const liveOthers = rows.filter((p) => isPromoLive(p) && p.id !== editing?.id).length;
+      if (liveOthers >= limit) return alert(`Your ${currentPlan().name} plan allows up to ${limitText(limit)} live promos or events. Hide one or change your plan.`);
+    }
     if (imageBlob) {
       const path = `${partner ? ownerId() + "/" : ""}${Date.now()}.jpg`; // businesses upload into their own folder
       const { error: uploadError } = await db.storage.from(PROMO_BUCKET).upload(path, imageBlob, { contentType: "image/jpeg" });
@@ -174,7 +180,10 @@ function createPromoManager(root, { partner }) {
     const { data, error } = await query;
     if (error) return alert(error.message + " — run promotions.sql in Supabase first.");
     rows = data;
-    if (partner) await loadDishes();
+    if (partner) {
+      await loadDishes();
+      q("[data-usage]").textContent = `${currentPlan().name}: ${rows.filter(isPromoLive).length} of ${limitText(currentPlan().limits.posts)} live promos or events used.`;
+    }
     renderList();
   }
 

@@ -32,6 +32,7 @@
   <div class="layout" id="layout">
     <aside id="sidenav" aria-label="Dashboard menu" hidden>
       <button type="button" id="btn-menu-close" class="menu-close" aria-label="Close menu">×</button>
+      <div class="side-user" id="side-user" hidden></div>
       <div data-role="customer">
         <button data-go="customer-home"><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg> Home</button>
         <button data-go="foods"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7"/></svg> Explore Food</button>
@@ -141,6 +142,7 @@
 
     <section data-view="customer-home" hidden>
       <h2 id="home-welcome">Welcome back!</h2>
+      <p class="note" id="home-membership"></p>
       <p class="note">Here is what is happening with your AllerFoods account today.</p>
 
       <h3>Order summary</h3>
@@ -193,6 +195,15 @@
     <section data-view="card" hidden>
       <h2>My AllerCard</h2>
 
+      <div id="card-gate" hidden>
+        <p class="lead">You are not a member yet. Get your AllerCard to store and share your allergy profile with participating restaurants. You can keep using AllerFoods without it.</p>
+        <div class="gate-grid">
+          <div id="card-gate-plan"></div>
+          <div class="panel"><h3>Payment</h3><div id="card-pay"></div></div>
+        </div>
+      </div>
+
+      <div id="card-content" hidden>
       <div class="card-layout">
         <div class="card-visual">
           <div id="card3d" aria-label="3D AllerCard. Drag to rotate."></div>
@@ -208,6 +219,7 @@
           </div>
           <p class="note">AllerCard: <b data-plan-price="allercard"></b>. A physical QR card to store and share your allergy profile with participating food establishments.</p>
         </div>
+      </div>
       </div>
     </section>
 
@@ -350,18 +362,20 @@
 
     <!-- 2. FOOD ESTABLISHMENT FLOW -->
     <section data-view="pricing" hidden>
-      <h2>Plans &amp; pricing</h2>
-      <p class="lead">Simple pricing for diners and for food businesses.</p>
-      <h3>For diners</h3>
-      <div class="plan-grid" id="pricing-diners"></div>
-      <h3>For food businesses</h3>
-      <p class="note">Monthly subscriptions, billed after your application is approved.</p>
+      <div class="pricing-hero">
+        <h2>Plans &amp; pricing</h2>
+        <p>Simple pricing for diners and for food businesses.</p>
+      </div>
+      <h3 class="pricing-title">For diners</h3>
+      <div class="plan-grid plan-grid-single" id="pricing-diners"></div>
+      <h3 class="pricing-title">For food businesses</h3>
+      <p class="note">Monthly subscriptions. You pick your plan after you fill in the application form.</p>
       <div class="plan-grid" id="pricing-business"></div>
     </section>
 
     <section data-view="partner" hidden>
       <h2>Partner with AllerLink</h2>
-      <p>Choose a plan below. Billing starts after your application is approved. <a href="#" data-go="pricing">Compare plans</a></p>
+      <p>Fill in the form, then choose your plan and pay (demo) to send your application. <a href="#" data-go="pricing">Compare plans</a></p>
       <form id="form-partner">
         <label>Business name <input name="business_name" required></label>
         <label>Business type
@@ -373,10 +387,6 @@
         <label>Business email (this is your login) <input name="email" type="email" required></label>
         <label>Password <input name="password" type="password" minlength="8" required></label>
         <label>Phone number <input name="phone" type="tel" required></label>
-        <fieldset class="plan-field">
-          <legend>Choose your plan</legend>
-          <div id="plan-options"></div>
-        </fieldset>
         <fieldset class="doc-group">
           <legend>Proof of registered business</legend>
           <p class="note">Upload a clear photo or scan of each document. PDF or image (JPG, PNG, ...), up to 2 MB each. Only the AllerLink team reviewing your application can see them.</p>
@@ -407,7 +417,7 @@
     <section data-view="partner-home" hidden>
       <h2>Business profile</h2>
       <p class="note">Your restaurant or café account on AllerLink. Guests never see this page.</p>
-      <p class="panel plan-summary">Your plan: <b id="partner-plan">—</b> <a href="#" data-go="pricing">Compare plans</a></p>
+      <p class="panel plan-summary">Your plan: <b id="partner-plan">—</b> <a href="#" data-go="pricing">Compare plans</a> <button type="button" class="ghost" data-action="change-plan">Change plan</button></p>
       <form class="panel" id="form-partner-profile">
         <div class="avatar-wrap">
           <img id="biz-avatar-preview" src="" alt="Business logo" class="avatar" hidden>
@@ -442,6 +452,7 @@
     <section data-view="partner-products" hidden>
       <h2>Products</h2>
       <p class="note">Add dishes guests can order on AllerFoods. Include ingredients so allergy checks stay accurate.</p>
+      <p class="note" id="plan-usage"></p>
       <form class="panel" id="form-product">
         <h3 id="product-form-title">Add product</h3>
         <label>Name <input name="name" required placeholder="Grilled Chicken Bowl"></label>
@@ -468,6 +479,7 @@
         <button type="button" data-range="monthly">Monthly</button>
         <button type="button" data-range="yearly">Yearly</button>
       </div>
+      <p class="note" id="sales-plan-note" hidden>Your plan includes daily and monthly reports. Change your plan to unlock yearly reports.</p>
       <div class="stats">
         <div class="stat"><small id="sales-label">Today</small><b id="sales-total">₱0</b></div>
         <div class="stat"><small>Orders</small><b id="sales-count">0</b></div>
@@ -609,12 +621,19 @@
   <script src="cardart.js"></script>
   <script src="card3d.js"></script>
   <script src="allergy-picker.js"></script>
+  <dialog id="plan-dialog" class="plan-dialog">
+    <button type="button" class="dialog-close" aria-label="Close">×</button>
+    <div id="plan-dialog-body"></div>
+  </dialog>
+
   <script src="business-documents.js"></script>
+  <script src="payment.js"></script>
   <script src="plans.js"></script>
   <script src="diets.js"></script>
   <script src="app.js"></script>
   <script src="foods.js"></script>
   <script src="customer-home.js"></script>
+  <script src="membership.js"></script>
   <script src="employee.js"></script>
   <script src="promo-manager.js"></script>
   <script src="card-zoom.js"></script>

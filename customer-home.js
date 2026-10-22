@@ -7,6 +7,9 @@ const el = (id) => document.getElementById(id);
 async function loadCustomerHome() {
   const firstName = (state.customer?.display_name || "").trim().split(" ")[0];
   el("home-welcome").textContent = firstName ? `Welcome back, ${firstName}!` : "Welcome back!";
+  el("home-membership").innerHTML = isMember()
+    ? "You are a <b>Member</b>. Your AllerCard is ready."
+    : `You are a <b>Non-member</b>. <a href="#" data-go="card">Get your AllerCard for ${planPrice(PLANS.allercard)}</a> to share your allergy profile with restaurants.`;
   if (!db) return;
 
   const [orders, wallet] = await Promise.all([

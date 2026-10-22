@@ -48,13 +48,13 @@ const pageLoaders = {
   allergy: () => fillEditForm(),
   account: () => fillEditForm(),
   favorites: () => renderFavoritesPage(),
-  card: () => render2dCard(state.customer),
+  card: () => renderCardAccess(),
   foods: () => loadFoods(),
   wallet: () => loadWallet(),
   "partner-home": () => fillPartnerProfile(),
   "partner-products": () => renderProducts(),
   "partner-promos": () => loadPartnerPromos(),
-  "partner-sales": () => renderPartnerSales(),
+  "partner-sales": () => { applySalesPlan(); renderPartnerSales(); },
   "employee-home": () => fillEmployeeProfile(),
   "employee-users": () => loadEmployeeUsers(),
   "employee-businesses": () => loadEmployeeBusinesses(),
@@ -85,13 +85,18 @@ function show(view, { isBack = false, reset = false } = {}) {
   });
 
   try {
+    updateSideUser(); // Member / plan label
+  } catch (error) {
+    console.error("Could not update the side menu label:", error);
+  }
+  try {
     Promise.resolve(pageLoaders[view]?.()).catch((error) => console.error(`Could not load "${view}":`, error));
   } catch (error) {
     console.error(`Could not load "${view}":`, error); // the menu and highlight above are already updated
   }
 
   backButton.hidden = viewHistory.length === 0 || showSide; // the side menu replaces Back
-  if (view === "card") card3d.open(); // after the layout is set, so the viewer has a size
+  if (view === "card" && state.customer?.is_member) card3d.open(); // after the layout is set, so the viewer has a size
   else card3d.close();
   window.scrollTo(0, 0);
 }
@@ -363,8 +368,12 @@ async function uploadDocuments(userId, files) {
 
 document.getElementById("form-partner").addEventListener("submit", async (e) => {
   e.preventDefault();
+  const choice = await askPlan(); // once the form is valid, the plans pop up, then a demo payment
+  if (!choice) return;
   const { consent, password, business_type_other, ...application } = formData(e.target);
   application.business_type = readBusinessType(e.target);
+  application.plan = choice.plan;
+  application.payment_method = choice.method;
   const files = chosenDocuments(docFields);
   if (db) {
     // The business registers its login now; an employee activates it by approving the application.
@@ -777,6 +786,7 @@ async function renderProducts() {
   const list = document.getElementById("product-list");
   if (!list) return;
   const products = await loadProducts();
+  showPlanUsage(products.length);
   list.replaceChildren();
   if (!products.length) {
     list.innerHTML = '<p class="note">No products yet. Add your first dish above.</p>';
@@ -939,6 +949,7 @@ productForm?.addEventListener("submit", async (e) => {
     diets: pickedDiets(),
     image_url: productImage || null,
   };
+  if (!editingProduct && (await loadProducts()).length >= currentPlan().limits.dishes) return alert(dishLimitMessage());
   if (editingProduct) {
     if (!(await saveProductChanges(editingProduct, row))) return;
   } else if (db && state.establishment?.id && state.establishment.id !== "demo") {
