@@ -510,3 +510,6 @@ main:has([data-view="home"]:not([hidden])) { max-width: 1120px; }
 @media (max-width: 1000px) { .welcome .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 600px) { .welcome .steps { grid-template-columns: 1fr; } }
 @media (max-width: 860px) { .hero { grid-template-columns: 1fr; gap: 1.5rem; } }
+
+/* Center the narrow account pages (title, notes and forms together) */
+[data-view="account"], [data-view="settings"], [data-view="allergy"] { max-width: 520px; margin: 0 auto; }
