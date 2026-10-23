@@ -67,9 +67,19 @@
 
     <!-- 1. HOMEPAGE -->
     <section data-view="home" class="welcome">
-      <p class="eyebrow">Welcome to AllerFoods</p>
-      <h1>Eat with confidence. Order with convenience. Dine with greater security.</h1>
-      <p class="lead">AllerFoods connects food allergy awareness, convenient online food ordering, and participating food establishments in one platform. Manage your allergy profile, discover food options, order your favorite meals, and securely share essential allergy information with authorized restaurant staff through your AllerCard.</p>
+      <div class="hero">
+        <div class="hero-text">
+          <p class="eyebrow">Welcome to AllerFoods</p>
+          <h1>Eat with confidence. Order with convenience. Dine with greater security.</h1>
+          <p class="lead">AllerFoods connects food allergy awareness, convenient online food ordering, and participating food establishments in one platform. Manage your allergy profile, discover food options, order your favorite meals, and securely share essential allergy information with authorized restaurant staff through your AllerCard.</p>
+          <div class="actions">
+            <button class="primary" data-go="login" data-kind="customer">Customer</button>
+            <button class="ghost" data-go="partner">Partner With Us</button>
+            <button class="ghost" data-go="pricing">Plans &amp; pricing</button>
+          </div>
+        </div>
+        <img class="hero-img" src="hero.jpg" width="1536" height="1024" alt="A diner using her phone while a restaurant staff member scans her AllerCard">
+      </div>
       <hr>
       <h3>How AllerFoods Works</h3>
       <ol class="steps">
@@ -90,11 +100,6 @@
           <div><b>4. Partner With AllerFoods</b><p>Are you a food establishment? Join AllerFoods to connect with customers, showcase your menu, manage orders, and support more informed food choices through allergy-aware service.</p></div>
         </li>
       </ol>
-      <div class="actions">
-        <button class="primary" data-go="login" data-kind="customer">Customer</button>
-        <button class="ghost" data-go="partner">Partner With Us</button>
-        <button class="ghost" data-go="pricing">Plans &amp; pricing</button>
-      </div>
       <p class="note">AllerCard is an information and communication tool. It does not diagnose allergies or guarantee an allergen-free meal.</p>
     </section>
 
@@ -371,7 +376,7 @@
       <h3 class="pricing-title">For diners</h3>
       <div class="plan-grid plan-grid-single" id="pricing-diners"></div>
       <h3 class="pricing-title">For food businesses</h3>
-      <p class="note">Monthly subscriptions. You pick your plan after you fill in the application form.</p>
+      <p class="note">Businesses pay a monthly plan fee, and AllerFoods takes a <b data-commission></b> commission on sales made through the platform. You pick your plan after you fill in the application form.</p>
       <div class="plan-grid" id="pricing-business"></div>
     </section>
 
@@ -394,6 +399,8 @@
           <p class="note">Upload a clear photo or scan of each document. PDF or image (JPG, PNG, ...), up to 2 MB each. Only the AllerLink team reviewing your application can see them.</p>
           <div id="doc-fields"></div>
         </fieldset>
+        <p class="notice"><b>Commission:</b> AllerFoods takes a <span data-commission></span> commission on sales made through the platform.</p>
+        <label class="check"><input type="checkbox" name="commission" required> I agree to the <span data-commission></span> sales commission described above.</label>
         <label class="check"><input type="checkbox" name="consent" required> I acknowledge the privacy notice and agree to handle customer allergy information only for food-safety communication.</label>
         <button class="primary">Submit application</button>
       </form>
@@ -475,7 +482,7 @@
 
     <section data-view="partner-sales" hidden>
       <h2>Sales</h2>
-      <p class="note">Totals from recorded partner sales. Switch the range below.</p>
+      <p class="note">Totals from recorded partner sales. Switch the range below. AllerFoods takes a <b data-commission></b> commission on sales made through the platform.</p>
       <div class="filters" id="sales-range">
         <button type="button" data-range="daily" aria-pressed="true">Daily</button>
         <button type="button" data-range="monthly">Monthly</button>

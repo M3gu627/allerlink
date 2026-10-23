@@ -26,6 +26,7 @@ const PLANS = {
   },
 };
 const BUSINESS_PLANS = ["starter", "pro", "enterprise"];
+const COMMISSION_RATE = 5; // percent AllerFoods takes from sales made through the platform
 
 const planAmount = (plan) => `₱${plan.price.toLocaleString("en-US")}`;
 const planPrice = (plan) => `${planAmount(plan)}${plan.period === "month" ? " / month" : " one-time"}`;
@@ -65,6 +66,9 @@ document.getElementById("pricing-business").addEventListener("click", (e) => {
   show("partner");
 });
 
+// Any element with data-commission shows the commission rate
+document.querySelectorAll("[data-commission]").forEach((item) => (item.textContent = `${COMMISSION_RATE}%`));
+
 // Any element with data-plan-price="allercard" shows that plan's price
 document.querySelectorAll("[data-plan-price]").forEach((item) => {
   item.textContent = planPrice(PLANS[item.dataset.planPrice]);
@@ -87,7 +91,7 @@ function askPlan({ title = "Choose your plan", current = null } = {}) {
 
     const chooseStep = () => {
       body.innerHTML = `<h3>${title}</h3>
-        <p class="note">Pick the plan that fits your business. Prices are per month.</p>
+        <p class="note">Pick the plan that fits your business. Prices are per month, and AllerFoods takes a ${COMMISSION_RATE}% commission on sales made through the platform.</p>
         <div class="plan-grid">${BUSINESS_PLANS.map((key) =>
           planCardHtml(key, `<button class="primary" type="button" data-pick="${key}" ${key === current ? "disabled" : ""}>${key === current ? "Current plan" : "Select"}</button>`, { highlight: key === (current ?? preferredPlan) })
         ).join("")}</div>`;

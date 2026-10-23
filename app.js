@@ -370,7 +370,7 @@ document.getElementById("form-partner").addEventListener("submit", async (e) => 
   e.preventDefault();
   const choice = await askPlan(); // once the form is valid, the plans pop up, then a demo payment
   if (!choice) return;
-  const { consent, password, business_type_other, ...application } = formData(e.target);
+  const { consent, commission, password, business_type_other, ...application } = formData(e.target);
   application.business_type = readBusinessType(e.target);
   application.plan = choice.plan;
   application.payment_method = choice.method;

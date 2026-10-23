@@ -496,3 +496,11 @@ main:has([data-view="pricing"]:not([hidden])) { max-width: 1120px; }
 .side-user .badge { justify-self: start; }
 .side-user a { color: #bcd4ff; font-size: .85rem; }
 #sales-range button:disabled { opacity: .45; cursor: not-allowed; }
+
+/* Homepage hero */
+main:has([data-view="home"]:not([hidden])) { max-width: 1120px; }
+.hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 2.5rem; align-items: center; padding: .5rem 0 2rem; }
+.welcome .hero h1 { margin: 0 0 1rem; font-size: clamp(1.9rem, 4.2vw, 3rem); }
+.hero-img { display: block; width: 100%; height: auto; border-radius: 20px; box-shadow: 0 18px 40px rgba(13, 42, 92, .18); }
+.welcome .steps { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem; }
+@media (max-width: 860px) { .hero { grid-template-columns: 1fr; gap: 1.5rem; } }
