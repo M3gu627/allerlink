@@ -250,7 +250,7 @@ function fillEditForm() {
   // Membership number derived from qr_token (matches the style shown on the card)
   const token = profile.qr_token || profile.id || "";
   const short = token.replace(/-/g, "").slice(0, 8).toUpperCase();
-  editForm.membership_no.value = short ? `AP-2026-${short.slice(0, 4)}` : "";
+  editForm.membership_no.value = short ? `AF-2026-${short.slice(0, 4)}` : "";
 
   editForm.display_name.value = profile.display_name || "";
   editForm.gender.value = profile.gender || "";
@@ -261,7 +261,7 @@ function fillEditForm() {
   const today = new Date();
   const issue = profile.created_at ? new Date(profile.created_at) : today;
   const valid = new Date(issue);
-  valid.setMonth(valid.getMonth() + 3); // 3-month AllerPass package
+  valid.setFullYear(valid.getFullYear() + 3); // cards are valid for 3 years
   const fmt = (d) => d.toLocaleDateString("en-US", { month: "2-digit", day: "2-digit", year: "2-digit" });
   editForm.issue_date.value = fmt(issue);
   editForm.valid_until.value = fmt(valid);

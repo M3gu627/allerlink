@@ -31,7 +31,7 @@ async function drawCardFace(profile) {
 
   const since = new Date(profile.created_at ?? Date.now());
   const validThru = new Date(since);
-  validThru.setMonth(validThru.getMonth() + 3); // one AllerPass period
+  validThru.setFullYear(validThru.getFullYear() + 3); // cards are valid for 3 years
 
   ctx.fillStyle = "#0d2a5c";
   ctx.font = "600 52px 'Segoe UI', sans-serif";
@@ -42,7 +42,7 @@ async function drawCardFace(profile) {
 
   ctx.fillStyle = "#ffffff";
   ctx.font = "bold 62px 'Courier New', monospace";
-  ctx.fillText(`AP-${since.getFullYear()}-${profile.qr_token.slice(0, 4).toUpperCase()}`, 195, 820);
+  ctx.fillText(`AF-${since.getFullYear()}-${profile.qr_token.slice(0, 4).toUpperCase()}`, 195, 820);
 
   const holder = document.createElement("div"); // the QR holds only the random card ID
   new QRCode(holder, { text: profile.qr_token, width: 280, height: 280 });
