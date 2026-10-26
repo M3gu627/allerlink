@@ -1,6 +1,7 @@
 // Allergy dropdown used by the sign-up form and the profile form.
 // Tick common allergens, or tick "Others", type an allergy and press Add (once per allergy).
 // The result is kept in a hidden input named "allergies" as a list the rest of the app already understands.
+// Optional noneBox: a separate "I have no food allergies" checkbox. While it is ticked the dropdown is cleared and locked.
 const COMMON_ALLERGENS = [
   ["peanuts", "Peanuts"],
   ["tree nuts", "Tree nuts"],
@@ -13,7 +14,7 @@ const COMMON_ALLERGENS = [
   ["sesame", "Sesame"],
 ];
 
-function createAllergyPicker(root) {
+function createAllergyPicker(root, noneBox = null) {
   root.innerHTML = `
     <details class="allergy-dropdown">
       <summary>Select allergies</summary>
@@ -33,6 +34,7 @@ function createAllergyPicker(root) {
     </details>
     <input type="hidden" name="allergies">`;
 
+  const details = root.querySelector("details");
   const summary = root.querySelector("summary");
   const boxes = [...root.querySelectorAll("input[type=checkbox]:not([data-other])")];
   const otherBox = root.querySelector("[data-other]");
@@ -44,16 +46,28 @@ function createAllergyPicker(root) {
 
   const clean = (text) => text.trim().toLowerCase();
 
+  const hasNone = () => Boolean(noneBox?.checked);
+
   function get() {
     const picked = boxes.filter((box) => box.checked).map((box) => box.value);
     return [...new Set([...picked, ...(otherBox.checked ? others : [])])];
   }
 
   function refresh() {
+    const none = hasNone();
+    if (none) { // "no allergies" clears everything and locks the dropdown
+      boxes.forEach((box) => (box.checked = false));
+      otherBox.checked = false;
+      others = [];
+      details.open = false;
+    }
+    [...boxes, otherBox, otherText, root.querySelector("[data-add]")].forEach((control) => (control.disabled = none));
+    details.classList.toggle("is-disabled", none);
+
     const list = get();
     otherArea.hidden = !otherBox.checked;
     hidden.value = list.join(", ");
-    summary.textContent = list.length ? list.join(", ") : "Select allergies";
+    summary.textContent = none ? "No allergies" : list.length ? list.join(", ") : "Select allergies";
     chips.replaceChildren(
       ...others.map((name) => {
         const chip = document.createElement("span");
@@ -88,10 +102,12 @@ function createAllergyPicker(root) {
     boxes.forEach((box) => (box.checked = wanted.includes(box.value)));
     others = wanted.filter((item) => !boxes.some((box) => box.value === item));
     otherBox.checked = others.length > 0;
+    if (noneBox) noneBox.checked = wanted.length === 0; // a saved empty list means "no allergies"
     refresh();
   }
 
   root.addEventListener("input", refresh);
+  noneBox?.addEventListener("change", refresh);
   root.addEventListener("click", (e) => {
     if (e.target.closest("[data-add]")) addOther();
     const remove = e.target.closest("[data-remove]");
@@ -107,5 +123,7 @@ function createAllergyPicker(root) {
   });
   otherBox.addEventListener("change", () => otherBox.checked && otherText.focus());
   refresh();
-  return { get, set };
+  // True once the person picked something or ticked "no allergies".
+  const isChosen = () => hasNone() || get().length > 0;
+  return { get, set, isChosen };
 }

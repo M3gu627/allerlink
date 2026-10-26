@@ -151,7 +151,7 @@ document.getElementById("btn-consent").addEventListener("click", () => {
 });
 
 const profileForm = document.getElementById("form-profile");
-createAllergyPicker(document.getElementById("signup-allergies"));
+const signupAllergies = createAllergyPicker(document.getElementById("signup-allergies"), document.getElementById("signup-no-allergies"));
 
 const ageFrom = (date) => Math.floor((Date.now() - new Date(date)) / (365.25 * 24 * 3600 * 1000));
 
@@ -181,7 +181,7 @@ async function createAccount(profile, password) {
 profileForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   const { password, age, allergies, ...rest } = formData(profileForm);
-  if (!allergies) return alert("Please choose at least one allergy.");
+  if (!signupAllergies.isChosen()) return alert('Please choose your allergies, or tick "I have no food allergies".');
   const profile = {
     ...rest,
     allergies: parseAllergies(allergies),
@@ -218,7 +218,7 @@ document.getElementById("btn-download").addEventListener("click", async () => {
 
 const editForm = document.getElementById("form-edit"); // My Account
 const allergyForm = document.getElementById("form-allergy"); // My Allergy Profile
-const editAllergies = createAllergyPicker(document.getElementById("edit-allergies"));
+const editAllergies = createAllergyPicker(document.getElementById("edit-allergies"), document.getElementById("edit-no-allergies"));
 editForm.birthday.addEventListener("change", () => (editForm.age.value = ageFrom(editForm.birthday.value)));
 
 // Profile picture picker
@@ -304,7 +304,7 @@ editForm.addEventListener("submit", async (e) => {
 allergyForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   const { allergies, emergency_notes } = formData(allergyForm);
-  if (!allergies) return alert("Please choose at least one allergy.");
+  if (!editAllergies.isChosen()) return alert('Please choose your allergies, or tick "I have no food allergies".');
   await saveCustomerChanges({ allergies: parseAllergies(allergies), emergency_notes });
 });
 
@@ -628,7 +628,7 @@ async function lookup(token) {
 function showResult(profile) {
   document.getElementById("result-name").textContent = profile.display_name;
   document.getElementById("result-allergies").innerHTML =
-    profile.allergies.map((a) => `<li>${a.replace(/</g, "&lt;")}</li>`).join("");
+    profile.allergies.map((a) => `<li>${a.replace(/</g, "&lt;")}</li>`).join("") || "<li>No allergies declared</li>";
   document.getElementById("result").hidden = false;
 }
 

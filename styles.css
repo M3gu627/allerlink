@@ -513,3 +513,6 @@ main:has([data-view="home"]:not([hidden])) { max-width: 1120px; }
 
 /* Center the narrow account pages (title, notes and forms together) */
 [data-view="account"], [data-view="settings"], [data-view="allergy"] { max-width: 520px; margin: 0 auto; }
+
+/* "No allergies" locks the allergy dropdown */
+.allergy-dropdown.is-disabled { opacity: .55; pointer-events: none; }
